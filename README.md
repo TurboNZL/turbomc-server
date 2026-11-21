@@ -1,116 +1,151 @@
-<p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="/program_info/org.prismlauncher.PrismLauncher.logo-darkmode.svg">
-  <source media="(prefers-color-scheme: light)" srcset="/program_info/org.prismlauncher.PrismLauncher.logo.svg">
-  <img alt="Prism Launcher" src="/program_info/org.prismlauncher.PrismLauncher.logo.svg" width="40%">
-</picture>
-</p>
+<div align="center">
 
-<p align="center">
-  Prism Launcher is a custom launcher for Minecraft that allows you to easily manage multiple installations of Minecraft at once.<br />
-  <br />This is a <b>fork</b> of the MultiMC Launcher and is <b>not</b> endorsed by it.
-</p>
+# TurboMC Server
 
-## Installation
+**Run, update and manage your Minecraft servers from one familiar window.**
 
-- All downloads and instructions for Prism Launcher can be found on our [Website](https://prismlauncher.org/download).
-- Last build status can be found in the [GitHub Actions](https://github.com/PrismLauncher/PrismLauncher/actions) tab (this also includes the pull requests status).
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0--only-C4282D?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
+[![Qt 6](https://img.shields.io/badge/Qt-6.8-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
+[![C++](https://img.shields.io/badge/C%2B%2B-23-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)](CMakeLists.txt)
+[![Status](https://img.shields.io/badge/status-early%20development-orange?style=for-the-badge)](#-status)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%C2%B7%20Windows%20%C2%B7%20macOS-555?style=for-the-badge)](#-building)
 
-<p align="center">
-<a href="https://repology.org/project/prismlauncher/versions">
-    <img src="https://repology.org/badge/vertical-allrepos/prismlauncher.svg?columns=3" alt="Packaging status">
-</a>
-</p>
+<br />
 
-### Development Builds
+TurboMC Server is a desktop app that keeps all your Minecraft **servers** in one list, the way
+[Prism Launcher](https://prismlauncher.org) keeps your game installs: pick a version, install mods or plugins
+from Modrinth, change versions with one click, and start the server with a live console.<br />
+No Docker, no panel, no web server to babysit.
 
-Please understand that these builds are not intended for most users. There may be bugs, and other instabilities. You have been warned.
+<sub>Part of <a href="https://turbosuite.prismalite.org">TurboSuite</a> by TurboNZL.</sub>
 
-There are development builds available through:
+</div>
 
-- [GitHub Actions](https://github.com/PrismLauncher/PrismLauncher/actions) (includes builds from pull requests opened by contributors)
-- [nightly.link](https://prismlauncher.org/nightly) (this will always point only to the latest version of develop)
+> [!IMPORTANT]
+> TurboMC Server is a **fork** of [Prism Launcher](https://github.com/PrismLauncher/PrismLauncher) (itself a fork of
+> MultiMC) and is **not** affiliated with, endorsed by, or supported by the Prism Launcher project.
+> It is also not affiliated with Mojang or Microsoft. Please do not ask Prism for help with it.
 
-These have debug information in the binaries, so their file sizes are relatively larger.
+---
 
-Prebuilt Development builds are provided for **Linux**, **Windows** and **macOS**.
+## ✨ What it does
 
-On Linux, we also offer our own [Flatpak nightly repository](https://github.com/PrismLauncher/flatpak). Most software centers are able to install it by opening [this link](https://flatpak.prismlauncher.org/prismlauncher-nightly.flatpakref).
+| | |
+|---|---|
+| 🗂️ **One list for every server** | Each server is an *instance* with its own folder, settings, notes and world list, in the same MultiMC-style window you may already know. |
+| ⬇️ **Install in two clicks** | Choose the software and a Minecraft version; the right jar is downloaded, and checked against the checksum when the provider publishes one. |
+| 🔁 **Change versions easily** | Switch software or version from the **Server version** page. Nothing updates on its own. |
+| 🖥️ **Live console** | Start, stop (graceful, with a save) or kill. Type commands, search the log, colour-coded warnings and errors. |
+| 📜 **EULA handled** | The Minecraft EULA is shown once, and only you can accept it. |
+| 🧩 **Mods and plugins** | Browse and install from Modrinth (CurseForge with your own API key), filtered to what your server software can load. *Still being tested.* |
+| ☕ **Java aware** | The Java version each Minecraft release needs is looked up and recorded. |
 
-## Community & Support
+### Supported server software
 
-Feel free to create a GitHub issue if you find a bug or want to suggest a new feature. We have multiple community spaces where other community members can help you:
+| Software | Install | Mods / plugins | Notes |
+|---|:---:|---|---|
+| **Vanilla** | ✅ | data packs | Official Mojang server |
+| **Paper** | ✅ | Paper / Spigot / Bukkit plugins | |
+| **Purpur** | ✅ | Purpur / Paper / Spigot / Bukkit plugins | |
+| **Fabric** | ✅ | Fabric mods (Modrinth) | Geyser and Floodgate are available on Modrinth for Bedrock crossplay |
+| Quilt | 📋 | | Planned |
+| Rust servers (e.g. Pumpkin) | 📋 | | Planned as *experimental*, pre-1.0 upstream |
 
-- **Our Discord server:**
+## 🚦 Status
 
-[![Prism Launcher Discord server](https://discordapp.com/api/guilds/1031648380885147709/widget.png?style=banner3)](https://prismlauncher.org/discord)
+TurboMC Server is in **early development**. The core works end to end (install → EULA → start → console → graceful stop,
+tested on Vanilla, Paper, Purpur and Fabric), but a lot is still on the way. There are no packaged releases yet.
 
-- **Our Matrix space:**
+| Area | State |
+|---|:---:|
+| Create / install servers (Vanilla, Paper, Purpur, Fabric) | ✅ |
+| Start, stop, kill, live console with commands | ✅ |
+| Switch software / version | ✅ |
+| Modrinth mods and plugins for the installed software | 🚧 wired up, needs more testing |
+| `server.properties` editor | 🚧 |
+| World backups, with an automatic one before version changes | 🚧 |
+| playit.gg tunnel manager (run only while the server runs) | 📋 |
+| Port-forwarding helpers (UPnP, port-clash check) | 📋 |
+| Automatic Java selection per server | 📋 |
+| World / folder size view | 📋 |
+| Optional, opt-in update checks | 📋 |
+| Quilt, experimental Rust servers | 📋 |
+| `.deb`, AppImage, Windows and macOS builds | 📋 |
 
-[![Prism Launcher Space](https://img.shields.io/matrix/prismlauncher:matrix.org?style=for-the-badge&label=Matrix%20Space&logo=matrix&color=purple)](https://prismlauncher.org/matrix)
+✅ done · 🚧 in progress · 📋 planned
 
-- **Our Subreddit:**
+**Nothing updates automatically.** Version changes, mod updates and tunnels only happen when you ask for them.
 
-[![r/PrismLauncher](https://img.shields.io/reddit/subreddit-subscribers/prismlauncher?style=for-the-badge&logo=reddit)](https://prismlauncher.org/reddit)
+## 🔨 Building
 
-## Translations
+You need a C++23 compiler, CMake ≥ 3.28, Ninja and **Qt 6.8 or newer**. Most distributions ship an older Qt, so use
+the [Qt online installer](https://www.qt.io/download-qt-installer) or [`aqtinstall`](https://github.com/miurahr/aqtinstall).
 
-The translation effort for Prism Launcher is hosted on [Weblate](https://hosted.weblate.org/projects/prismlauncher/launcher/) and information about translating Prism Launcher is available at <https://github.com/PrismLauncher/Translations>.
+<details>
+<summary><b>Debian / Ubuntu example</b></summary>
 
-## Building
+```bash
+sudo apt install build-essential cmake ninja-build pkg-config extra-cmake-modules \
+    libcmark-dev cmark libarchive-dev libqrencode-dev libtomlplusplus-dev zlib1g-dev \
+    libgl-dev libvulkan-dev openjdk-17-jdk-headless
+pip install aqtinstall
+aqt install-qt linux desktop 6.8.3 linux_gcc_64 -m qtnetworkauth -O ~/Qt
+```
 
-If you want to build Prism Launcher yourself, check the [build instructions](https://prismlauncher.org/wiki/development/build-instructions).
+`openjdk-17-jdk-headless` is needed because the bundled Java helper jars target Java 7 and newer JDKs cannot compile that.
 
-## Sponsors & Partners
+```bash
+git clone https://github.com/TurboNZL/turbomc-server
+cd turbomc-server
+git submodule update --init libraries/libnbtplusplus
 
-We thank all the wonderful backers over at Open Collective! Support Prism Launcher by [becoming a backer](https://opencollective.com/prismlauncher).
+CMAKE_PREFIX_PATH=~/Qt/6.8.3/gcc_64 \
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DLauncher_QT_VERSION_MAJOR=6 -DBUILD_TESTING=OFF
+cmake --build build
+```
 
-[![OpenCollective Backers](https://opencollective.com/prismlauncher/backers.svg?width=890&limit=1000)](https://opencollective.com/prismlauncher#backers)
+Run it with `LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib ./build/prismlauncher` (the binary is still called
+`prismlauncher` for now; renaming is on the to-do list).
 
-Thanks to JetBrains for providing us a few licenses for all their products, as part of their [Open Source program](https://www.jetbrains.com/opensource/).
+</details>
 
-<a href="https://jb.gg/OpenSource">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://www.jetbrains.com/company/brand/img/logo_jb_dos_4.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg">
-  <img alt="JetBrains logo" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg" width="40%">
-</picture>
-</a>
+### API keys
 
-Thanks to Weblate for hosting our translation efforts.
+This build ships with **no third-party API keys**. Modrinth needs none. To enable CurseForge, get your own key from the
+[CurseForge developer console](https://console.curseforge.com/) and configure with
+`-DLauncher_CURSEFORGE_API_KEY=<your key>`. Prism Launcher's keys are not reused here.
 
-<a href="https://hosted.weblate.org/engage/prismlauncher/">
-<img src="https://hosted.weblate.org/widgets/prismlauncher/-/open-graph.png" alt="Translation status" width="300" />
-</a>
+## 🤝 Community & support
 
-Thanks to Netlify for providing us their excellent web services, as part of their [Open Source program](https://www.netlify.com/open-source/).
+Found a bug or have an idea? [Open an issue](https://github.com/TurboNZL/turbomc-server/issues).
+Please include your OS, the server software and version, and the console log.
 
-<a href="https://www.netlify.com"> <img src="https://www.netlify.com/v3/img/components/netlify-color-accent.svg" alt="Deploys by Netlify" /> </a>
+## 🙏 Credits
 
-Thanks to the awesome people over at [MacStadium](https://www.macstadium.com/), for providing M1-Macs for development purposes!
+TurboMC Server stands on the shoulders of:
 
-<a href="https://www.macstadium.com"><img src="https://uploads-ssl.webflow.com/5ac3c046c82724970fc60918/5c019d917bba312af7553b49_MacStadium-developerlogo.png" alt="Powered by MacStadium" width="300"></a>
+- **[Prism Launcher](https://prismlauncher.org)** and its contributors, the code this project is forked from
+- **[PolyMC](https://github.com/PolyMC/PolyMC)** and **[MultiMC](https://github.com/MultiMC/Launcher)**, where Prism came from
+- **[PaperMC](https://papermc.io)**, **[Purpur](https://purpurmc.org)**, **[FabricMC](https://fabricmc.net)** and **Mojang**, whose servers it installs
+- **[Modrinth](https://modrinth.com)** and **[CurseForge](https://www.curseforge.com)** for their mod platforms
 
-## Forking/Redistributing/Custom builds policy
+Full copyright and licence notices are in [COPYING.md](COPYING.md).
 
-You are free to fork, redistribute and provide custom builds as long as you follow the terms of the [license](LICENSE) (this is a legal responsibility), and if you made code changes rather than just packaging a custom build, please do the following as a basic courtesy:
+## 🍴 Forking & redistributing
 
-- Make it clear that your fork is not Prism Launcher and is not endorsed by or affiliated with the Prism Launcher project (<https://prismlauncher.org>).
-- Go through [CMakeLists.txt](CMakeLists.txt) and change Prism Launcher's API keys to your own or set them to empty strings (`""`) to disable them (this way the program will still compile but the functionality requiring those keys will be disabled).
+You are free to fork and redistribute under the terms of the [license](LICENSE) (this is a legal responsibility). In short:
 
-If you have any questions or want any clarification on the above conditions please make an issue and ask us.
+- Keep it **GPL-3.0-only**, give recipients the source, and keep the copyright notices in [COPYING.md](COPYING.md).
+- Make clear that your fork is not TurboMC Server, and is not endorsed by or affiliated with it.
+- Use **your own API keys** (or none). Do not reuse keys from this repository's history.
+- Do not use Mojang's or Microsoft's branding, or Prism Launcher's name and logo, to suggest an official connection.
 
-If you are just building Prism Launcher for your distribution, please make sure to set the `Launcher_BUILD_PLATFORM` to a slug representing your distribution. Examples are `archlinux`, `fedora` and `nixpkgs`.
+## 📄 License
 
-Note that if you build this software without removing the provided API keys in [CMakeLists.txt](CMakeLists.txt) you are accepting the following terms and conditions:
+[![GPL-3.0](https://img.shields.io/badge/license-GPL--3.0--only-C4282D?logo=gnu&logoColor=white)](LICENSE)
 
-- [Microsoft Identity Platform Terms of Use](https://docs.microsoft.com/en-us/legal/microsoft-identity-platform/terms-of-use)
-- [CurseForge 3rd Party API Terms and Conditions](https://support.curseforge.com/en/support/solutions/articles/9000207405-curse-forge-3rd-party-api-terms-and-conditions)
+All code is available under the **GPL-3.0-only** license, inherited from Prism Launcher. Parts derived from MultiMC
+remain under their original Apache-2.0 notices (see [COPYING.md](COPYING.md)).
 
-If you do not agree with these terms and conditions, then remove the associated API keys from the [CMakeLists.txt](CMakeLists.txt) file by setting them to an empty string (`""`).
-
-## License [![https://github.com/PrismLauncher/PrismLauncher/blob/develop/LICENSE](https://img.shields.io/github/license/PrismLauncher/PrismLauncher?label=License&logo=gnu&color=C4282D)](LICENSE)
-
-All launcher code is available under the GPL-3.0-only license.
-
-The logo and related assets are under the CC BY-SA 4.0 license.
+*Minecraft is a trademark of Mojang Synergies AB. This project is not an official Minecraft product.*

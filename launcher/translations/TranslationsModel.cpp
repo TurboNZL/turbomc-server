@@ -547,6 +547,10 @@ void TranslationsModel::downloadIndex()
     if (d->m_indexJob || d->m_downloadJob) {
         return;
     }
+    if (BuildConfig.TRANSLATION_FILES_URL.isEmpty()) {
+        // No translation server is configured for this build; only the bundled English text is available.
+        return;
+    }
     qDebug() << "Downloading Translations Index...";
     d->m_indexJob.reset(new NetJob("Translations Index", APPLICATION->network()));
     const MetaEntryPtr entry = APPLICATION->metacache()->resolveEntry("translations", "index_v2.json");
@@ -588,6 +592,9 @@ void TranslationsModel::downloadTranslation(const QString& key)
         return;
     }
 
+    if (BuildConfig.TRANSLATION_FILES_URL.isEmpty()) {
+        return;
+    }
     d->m_downloadingTranslation = key;
     const MetaEntryPtr entry = APPLICATION->metacache()->resolveEntry("translations", "mmc_" + key + ".qm");
     entry->setStale(true);
