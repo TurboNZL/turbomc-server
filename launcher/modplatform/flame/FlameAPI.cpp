@@ -175,6 +175,10 @@ int getMappedModLoader(ModPlatform::ModLoaderType loaders)
         case ModPlatform::LegacyFabric:
         case ModPlatform::Ornithe:
         case ModPlatform::Rift:
+        case ModPlatform::Paper:
+        case ModPlatform::Purpur:
+        case ModPlatform::Spigot:
+        case ModPlatform::Bukkit:
         case ModPlatform::None:
             break;  // not supported
     }

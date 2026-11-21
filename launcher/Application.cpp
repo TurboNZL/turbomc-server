@@ -1454,10 +1454,27 @@ bool Application::openJsonEditor(const QString& filename)
 
 bool Application::launch(BaseInstance* instance)
 {
-    // TODO(server-manager): start the server process for this instance.
-    Q_UNUSED(instance);
-    qWarning() << "Starting servers is not implemented yet.";
-    return false;
+    auto* server = dynamic_cast<MinecraftInstance*>(instance);
+    if (!server) {
+        return false;
+    }
+    if (m_updateRunning) {
+        qDebug() << "Cannot start servers while an update is running.";
+        return false;
+    }
+    if (server->isRunning()) {
+        showInstanceWindow(server, "console");
+        return true;
+    }
+    QString error;
+    if (!server->serverProcess()->start(&error)) {
+        // The window explains EULA and install problems to the user.
+        showInstanceWindow(server, "console");
+        qWarning() << "Could not start server" << server->id() << ":" << error;
+        return false;
+    }
+    showInstanceWindow(server, "console");
+    return true;
 }
 
 bool Application::kill(BaseInstance* instance)
@@ -1465,6 +1482,10 @@ bool Application::kill(BaseInstance* instance)
     if (!instance->isRunning()) {
         qWarning() << "Attempted to kill instance" << instance->id() << ", which isn't running.";
         return false;
+    }
+    if (auto* server = dynamic_cast<MinecraftInstance*>(instance)) {
+        server->serverProcess()->kill();
+        return true;
     }
     return false;
 }

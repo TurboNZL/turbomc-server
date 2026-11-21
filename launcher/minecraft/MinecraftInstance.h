@@ -41,6 +41,8 @@
 #include <QProcess>
 
 #include "BaseInstance.h"
+#include "server/ServerProcess.h"
+#include "server/ServerTypes.h"
 
 class DataPackFolderModel;
 class LaunchStep;
@@ -118,6 +120,13 @@ class MinecraftInstance : public BaseInstance {
     QList<ResourceFolderModel*> resourceLists();
     WorldList* worldList();
 
+    //////  Server //////
+    Server::Process* serverProcess();
+    Server::Software serverSoftware() const;
+    QString serverMcVersion() const;
+    /// Mod/plugin loaders to filter Modrinth/CurseForge searches with.
+    ModPlatform::ModLoaderTypes addonLoaders() const;
+
     //////  Launch stuff //////
     QList<Task::Ptr> createUpdateTask() override { return {}; }
     QStringList extraArguments() override;
@@ -153,4 +162,5 @@ class MinecraftInstance : public BaseInstance {
     std::unique_ptr<TexturePackFolderModel> m_texture_pack_list;
     std::unique_ptr<DataPackFolderModel> m_data_pack_list;
     std::unique_ptr<WorldList> m_world_list;
+    std::unique_ptr<Server::Process> m_serverProcess;
 };

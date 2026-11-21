@@ -204,6 +204,12 @@ void MinecraftInstance::loadSpecificSettings()
         m_settings->registerOverride(global_settings->getSetting("PermGen"), memorySetting);
         m_settings->registerOverride(global_settings->getSetting("LowMemWarning"), memorySetting);
 
+        // Server software installed in this instance
+        m_settings->registerSetting("ServerSoftware", "vanilla");
+        m_settings->registerSetting("ServerMcVersion", "");
+        m_settings->registerSetting("ServerBuild", "");
+        m_settings->registerSetting("ServerJavaMajor", 0);
+
         // Native library workarounds
         auto nativeLibraryWorkaroundsOverride = m_settings->registerSetting("OverrideNativeWorkarounds", false);
         m_settings->registerOverride(global_settings->getSetting("UseNativeOpenAL"), nativeLibraryWorkaroundsOverride);
@@ -719,3 +725,30 @@ QList<Mod*> MinecraftInstance::getJarMods() const
 }
 
 #include "MinecraftInstance.moc"
+
+Server::Process* MinecraftInstance::serverProcess()
+{
+    if (!m_serverProcess) {
+        m_serverProcess = std::make_unique<Server::Process>(this);
+        connect(m_serverProcess.get(), &Server::Process::stateChanged, this, [this](Server::Process::State state) {
+            setRunning(state != Server::Process::State::Stopped);
+        });
+        connect(m_serverProcess.get(), &Server::Process::exited, this, [this](int, bool crashed) { setCrashed(crashed); });
+    }
+    return m_serverProcess.get();
+}
+
+Server::Software MinecraftInstance::serverSoftware() const
+{
+    return Server::softwareFromKey(m_settings->get("ServerSoftware").toString());
+}
+
+QString MinecraftInstance::serverMcVersion() const
+{
+    return m_settings->get("ServerMcVersion").toString();
+}
+
+ModPlatform::ModLoaderTypes MinecraftInstance::addonLoaders() const
+{
+    return Server::modLoaders(serverSoftware());
+}

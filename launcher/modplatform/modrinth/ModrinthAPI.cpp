@@ -33,7 +33,7 @@ QStringList getModLoaderStrings(const ModPlatform::ModLoaderTypes types)
     QStringList l;
     for (auto loader : { ModPlatform::NeoForge, ModPlatform::Forge, ModPlatform::Fabric, ModPlatform::Quilt, ModPlatform::LiteLoader,
                          ModPlatform::DataPack, ModPlatform::Babric, ModPlatform::BTA, ModPlatform::LegacyFabric, ModPlatform::Ornithe,
-                         ModPlatform::Rift }) {
+                         ModPlatform::Rift, ModPlatform::Paper, ModPlatform::Purpur, ModPlatform::Spigot, ModPlatform::Bukkit }) {
         if ((types & loader) != 0U) {
             l << getModLoaderAsString(loader);
         }
@@ -277,7 +277,8 @@ bool ModrinthAPI::validateModLoaders(ModPlatform::ModLoaderTypes loaders)
 {
     return loaders.testAnyFlags(ModPlatform::NeoForge | ModPlatform::Forge | ModPlatform::Fabric | ModPlatform::Quilt |
                                 ModPlatform::LiteLoader | ModPlatform::DataPack | ModPlatform::Babric | ModPlatform::BTA |
-                                ModPlatform::LegacyFabric | ModPlatform::Ornithe | ModPlatform::Rift);
+                                ModPlatform::LegacyFabric | ModPlatform::Ornithe | ModPlatform::Rift | ModPlatform::Paper |
+                                ModPlatform::Purpur | ModPlatform::Spigot | ModPlatform::Bukkit);
 }
 
 auto ModrinthAPI::getVersionsURL(const VersionSearchArgs& args) const -> std::optional<QString>

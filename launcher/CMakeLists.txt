@@ -206,6 +206,15 @@ set(MINECRAFT_SOURCES
 
 
     minecraft/GradleSpecifier.h
+    server/ServerInstallTask.cpp
+    server/ServerInstallTask.h
+    server/ServerLookup.cpp
+    server/ServerLookup.h
+    server/ServerProcess.cpp
+    server/ServerProcess.h
+    server/ServerTypes.cpp
+    server/ServerTypes.h
+
     minecraft/MinecraftInstance.cpp
     minecraft/MinecraftInstance.h
     minecraft/LaunchProfile.cpp

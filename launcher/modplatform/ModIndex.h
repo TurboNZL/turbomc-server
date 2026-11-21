@@ -47,7 +47,11 @@ enum class ModLoaderType : std::uint16_t {
     BTA = 1U << 8U,
     LegacyFabric = 1U << 9U,
     Ornithe = 1U << 10U,
-    Rift = 1U << 11U
+    Rift = 1U << 11U,
+    Paper = 1U << 12U,
+    Purpur = 1U << 13U,
+    Spigot = 1U << 14U,
+    Bukkit = 1U << 15U
 };
 
 ModLoaderType operator|(ModLoaderType lhs, ModLoaderType rhs);

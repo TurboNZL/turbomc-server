@@ -31,7 +31,8 @@ ModLoaderType operator|(ModLoaderType lhs, ModLoaderType rhs)
 }
 
 static const QList<ModLoaderType> loaderList = { NeoForge, Forge, Cauldron,     LiteLoader, Quilt, Fabric,
-                                                 Babric,   BTA,   LegacyFabric, Ornithe,    Rift };
+                                                 Babric,   BTA,   LegacyFabric, Ornithe,    Rift,
+                                                 Paper,    Purpur, Spigot,     Bukkit };
 
 QList<ModLoaderType> modLoaderTypesToList(ModLoaderTypes flags)
 {
@@ -111,6 +112,14 @@ auto getModLoaderAsString(ModLoaderType type) -> const QString
             return "ornithe";
         case Rift:
             return "rift";
+        case Paper:
+            return "paper";
+        case Purpur:
+            return "purpur";
+        case Spigot:
+            return "spigot";
+        case Bukkit:
+            return "bukkit";
         default:
             break;
     }
@@ -141,6 +150,14 @@ auto getModLoaderFromString(QString type) -> ModLoaderType
         return Ornithe;
     if (type == "rift")
         return Rift;
+    if (type == "paper")
+        return Paper;
+    if (type == "purpur")
+        return Purpur;
+    if (type == "spigot")
+        return Spigot;
+    if (type == "bukkit")
+        return Bukkit;
     return {};
 }
 
