@@ -58,7 +58,6 @@
 #include "ui/pages/BasePageProvider.h"
 #include "ui/pages/global/APIPage.h"
 #include "ui/pages/global/AppearancePage.h"
-#include "ui/pages/global/ExternalToolsPage.h"
 #include "ui/pages/global/JavaPage.h"
 #include "ui/pages/global/LanguagePage.h"
 #include "ui/pages/global/LauncherPage.h"
@@ -68,7 +67,6 @@
 #include "ui/setupwizard/AutoJavaWizardPage.h"
 #include "ui/setupwizard/JavaWizardPage.h"
 #include "ui/setupwizard/LanguageWizardPage.h"
-#include "ui/setupwizard/LoginWizardPage.h"
 #include "ui/setupwizard/PasteWizardPage.h"
 #include "ui/setupwizard/SetupWizard.h"
 #include "ui/setupwizard/ThemeWizardPage.h"
@@ -883,7 +881,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             m_globalSettingsProvider->addPage<MinecraftPage>();
             m_globalSettingsProvider->addPage<JavaPage>();
             m_globalSettingsProvider->addPage<APIPage>();
-            m_globalSettingsProvider->addPage<ExternalToolsPage>();
             m_globalSettingsProvider->addPage<ProxyPage>();
         }
 
@@ -1254,9 +1251,6 @@ bool Application::createSetupWizard()
             setupWizard.addPage(new ThemeWizardPage(&setupWizard));
         }
 
-        if (login) {
-            setupWizard.addPage(new LoginWizardPage(&setupWizard));
-        }
         if (setupWizard.exec() != QDialog::Accepted) {
             qWarning() << "Setup wizard was not completed; continuing with the current settings";
         }
@@ -1603,9 +1597,6 @@ InstanceWindow* Application::showInstanceWindow(MinecraftInstance* instance, con
         m_openWindows++;
         connect(window, &InstanceWindow::isClosing, this, [this, instance] {
             instance->setWindow(nullptr);
-            if (instance->launchController() != nullptr) {
-                instance->launchController()->setParentWidget(m_mainWindow);
-            }
             on_windowClose();
         });
         instance->setWindow(window);
@@ -1613,9 +1604,6 @@ InstanceWindow* Application::showInstanceWindow(MinecraftInstance* instance, con
 
     if (!page.isEmpty()) {
         window->selectPage(page);
-    }
-    if (instance->launchController() != nullptr) {
-        instance->launchController()->setParentWidget(window);
     }
     return window;
 }

@@ -101,7 +101,6 @@ class MinecraftInstance : public BaseInstance {
     QString getLocalLibraryPath() const;
 
     /** Returns whether the instance, with its version, has support for demo mode. */
-    bool supportsDemo() const;
 
     void updateRuntimeContext() override;
 

@@ -40,7 +40,6 @@
 #include <QSystemTrayIcon>
 #include <QToolButton>
 
-#include "LaunchController.h"
 #include "launch/LaunchTask.h"
 
 #include "ui/pages/BasePageContainer.h"

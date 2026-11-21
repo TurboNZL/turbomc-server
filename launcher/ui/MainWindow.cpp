@@ -85,26 +85,20 @@
 #include <java/JavaUtils.h>
 #include <launch/LaunchTask.h>
 #include <minecraft/MinecraftInstance.h>
-#include <minecraft/auth/AccountList.h>
 #include <net/ApiRequest.h>
 #include <net/NetJob.h>
-#include <news/NewsChecker.h>
-#include <tools/BaseProfiler.h>
 #include <updater/ExternalUpdater.h>
 #include "InstanceWindow.h"
 
 #include "ui/dialogs/AboutDialog.h"
 #include "ui/dialogs/CopyInstanceDialog.h"
-#include "ui/dialogs/CreateShortcutDialog.h"
 #include "ui/dialogs/CustomMessageBox.h"
 #include "ui/dialogs/ExportInstanceDialog.h"
 #include "ui/dialogs/ExportPackDialog.h"
 #include "ui/dialogs/IconPickerDialog.h"
 #include "ui/dialogs/ImportResourceDialog.h"
 #include "ui/dialogs/NewInstanceDialog.h"
-#include "ui/dialogs/NewsDialog.h"
 #include "ui/dialogs/ProgressDialog.h"
-#include "ui/dialogs/skins/SkinManageDialog.h"
 #include "ui/instanceview/InstanceDelegate.h"
 #include "ui/instanceview/InstanceProxyModel.h"
 #include "ui/instanceview/InstanceView.h"
@@ -134,17 +128,6 @@
 #include "Json.h"
 
 #include "MMCTime.h"
-
-namespace {
-QString profileInUseFilter(const QString& profile, bool used)
-{
-    if (used) {
-        return QObject::tr("%1 (in use)").arg(profile);
-    } else {
-        return profile;
-    }
-}
-}  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -218,9 +201,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->actionHelpButton->menu()->removeAction(ui->actionCheckUpdate);
         helpMenuButton->setPopupMode(QToolButton::InstantPopup);
 
-        auto accountMenuButton = dynamic_cast<QToolButton*>(ui->mainToolBar->widgetForAction(ui->actionAccountsButton));
-        accountMenuButton->setPopupMode(QToolButton::InstantPopup);
-
         auto exportInstanceMenu = new QMenu(this);
         exportInstanceMenu->addAction(ui->actionExportInstanceZip);
         exportInstanceMenu->addAction(ui->actionExportInstanceMrPack);
@@ -261,7 +241,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // add the toolbar toggles to the view menu
     ui->viewMenu->addAction(ui->instanceToolBar->toggleViewAction());
-    ui->viewMenu->addAction(ui->newsToolBar->toggleViewAction());
 
     updateThemeMenu();
     updateMainToolBar();
@@ -287,21 +266,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         secretEventFilter = new KonamiCode(this);
         connect(secretEventFilter, &KonamiCode::triggered, this, &MainWindow::konamiTriggered);
-    }
-
-    // Add the news label to the news toolbar.
-    {
-        m_newsChecker.reset(new NewsChecker(APPLICATION->network(), BuildConfig.NEWS_RSS_URL));
-        newsLabel = new QToolButton();
-        newsLabel->setIcon(QIcon::fromTheme("news"));
-        newsLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        newsLabel->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        newsLabel->setFocusPolicy(Qt::NoFocus);
-        ui->newsToolBar->insertWidget(ui->actionMoreNews, newsLabel);
-
-        connect(newsLabel, &QAbstractButton::clicked, this, &MainWindow::newsButtonClicked);
-        connect(m_newsChecker.get(), &NewsChecker::newsLoaded, this, &MainWindow::updateNewsLabel);
-        updateNewsLabel();
     }
 
     // Create the instance list widget
@@ -378,36 +342,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     statusBar()->addPermanentWidget(m_statusLeft, 1);
     statusBar()->addPermanentWidget(m_statusCenter, 0);
 
-    // Add "manage accounts" button, right align
-    QWidget* spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->mainToolBar->insertWidget(ui->actionAccountsButton, spacer);
-
-    // Use undocumented property... https://stackoverflow.com/questions/7121718/create-a-scrollbar-in-a-submenu-qt
-    ui->accountsMenu->setStyleSheet("QMenu { menu-scrollable: 1; }");
-
-    repopulateAccountsMenu();
-    connect(ui->actionNoDefaultAccount, &QAction::triggered, this, &MainWindow::changeActiveAccount);
-
-    // Update the menu when the active account changes.
-    // Shouldn't have to use lambdas here like this, but if I don't, the compiler throws a fit.
-    // Template hell sucks...
-    connect(APPLICATION->accounts(), &AccountList::defaultAccountChanged, this, [this] { defaultAccountChanged(); });
-    connect(APPLICATION->accounts(), &AccountList::listActivityChanged, this, [this] { defaultAccountChanged(); });
-    connect(APPLICATION->accounts(), &AccountList::listChanged, this, [this] { defaultAccountChanged(); });
-
-    // Show initial account
-    defaultAccountChanged();
-
-    // TODO: refresh accounts here?
-    // auto accounts = APPLICATION->accounts();
-
-    // load the news
-    {
-        m_newsChecker->reloadNews();
-        updateNewsLabel();
-    }
-
     if (APPLICATION->updaterEnabled()) {
         bool updatesAllowed = APPLICATION->updatesAreAllowed();
         updatesAllowedChanged(updatesAllowed);
@@ -454,12 +388,6 @@ void MainWindow::retranslateUi()
     }
 
     ui->retranslateUi(this);
-
-    MinecraftAccountPtr defaultAccount = APPLICATION->accounts()->defaultAccount();
-    if (defaultAccount) {
-        auto profileLabel = profileInUseFilter(defaultAccount->displayName(), defaultAccount->isInUse());
-        ui->actionAccountsButton->setText(profileLabel);
-    }
 
     m_changeIconButton->setToolTip(ui->actionChangeInstIcon->toolTip());
 
@@ -643,82 +571,6 @@ void MainWindow::updateThemeMenu()
     ui->actionChangeTheme->setMenu(themeMenu);
 }
 
-void MainWindow::repopulateAccountsMenu()
-{
-    ui->accountsMenu->clear();
-
-    // NOTE: this is done so the accounts button text is not set to the accounts menu title
-    QMenu* accountsButtonMenu = ui->actionAccountsButton->menu();
-    if (accountsButtonMenu) {
-        accountsButtonMenu->deleteLater();
-    }
-    accountsButtonMenu = new QMenu(this);
-    ui->actionAccountsButton->setMenu(accountsButtonMenu);
-
-    auto* accounts = APPLICATION->accounts();
-    auto defaultAccount = accounts->defaultAccount();
-
-    bool canChangeSkin = defaultAccount && (defaultAccount->accountType() == AccountType::MSA) && !defaultAccount->isActive();
-    ui->actionManageSkins->setEnabled(canChangeSkin);
-
-    QString activeProfileId = "";
-    if (defaultAccount) {
-        // this can be called before accountMenuButton exists
-        if (ui->actionAccountsButton) {
-            auto profileLabel = profileInUseFilter(defaultAccount->displayName(), defaultAccount->isInUse());
-            ui->actionAccountsButton->setText(profileLabel);
-        }
-    }
-
-    auto* accountsGroup = new QActionGroup(accountsButtonMenu);
-
-    if (accounts->count() <= 0) {
-        ui->actionNoAccountsAdded->setEnabled(false);
-        ui->accountsMenu->addAction(ui->actionNoAccountsAdded);
-    } else {
-        // TODO: Nicer way to iterate?
-        for (int i = 0; i < accounts->count(); i++) {
-            auto account = accounts->at(i);
-            auto profileLabel = profileInUseFilter(account->displayName(), account->isInUse());
-            auto* action = new QAction(profileLabel, accountsGroup);
-            action->setData(i);
-            action->setCheckable(true);
-            if (defaultAccount == account) {
-                action->setChecked(true);
-            }
-
-            auto face = account->getFace();
-            if (!face.isNull()) {
-                action->setIcon(face);
-            } else {
-                action->setIcon(QIcon::fromTheme("noaccount"));
-            }
-
-            const int highestNumberKey = 9;
-            if (i < highestNumberKey) {
-                action->setShortcut(QKeySequence(tr("Ctrl+%1").arg(i + 1)));
-            }
-
-            ui->accountsMenu->addAction(action);
-            connect(action, &QAction::triggered, this, &MainWindow::changeActiveAccount);
-        }
-    }
-
-    ui->accountsMenu->addSeparator();
-
-    ui->actionNoDefaultAccount->setData(-1);
-    ui->actionNoDefaultAccount->setChecked(!defaultAccount);
-    ui->actionNoDefaultAccount->setActionGroup(accountsGroup);
-
-    ui->accountsMenu->addAction(ui->actionNoDefaultAccount);
-
-    ui->accountsMenu->addSeparator();
-    ui->accountsMenu->addAction(ui->actionManageSkins);
-    ui->accountsMenu->addAction(ui->actionManageAccounts);
-
-    accountsButtonMenu->addActions(ui->accountsMenu->actions());
-}
-
 void MainWindow::updatesAllowedChanged(bool allowed)
 {
     if (!APPLICATION->updaterEnabled()) {
@@ -730,49 +582,6 @@ void MainWindow::updatesAllowedChanged(bool allowed)
 /*
  * Assumes the sender is a QAction
  */
-void MainWindow::changeActiveAccount()
-{
-    QAction* sAction = (QAction*)sender();
-
-    // Profile's associated Mojang username
-    if (sAction->data().typeId() != QMetaType::Int)
-        return;
-
-    QVariant action_data = sAction->data();
-    bool valid = false;
-    int index = action_data.toInt(&valid);
-    if (!valid) {
-        index = -1;
-    }
-    auto accounts = APPLICATION->accounts();
-    accounts->setDefaultAccount(index == -1 ? nullptr : accounts->at(index));
-    defaultAccountChanged();
-}
-
-void MainWindow::defaultAccountChanged()
-{
-    repopulateAccountsMenu();
-
-    MinecraftAccountPtr account = APPLICATION->accounts()->defaultAccount();
-
-    // FIXME: this needs adjustment for MSA
-    if (account && account->profileName() != "") {
-        auto profileLabel = profileInUseFilter(account->displayName(), account->isInUse());
-        ui->actionAccountsButton->setText(profileLabel);
-        auto face = account->getFace();
-        if (face.isNull()) {
-            ui->actionAccountsButton->setIcon(QIcon::fromTheme("noaccount"));
-        } else {
-            ui->actionAccountsButton->setIcon(face);
-        }
-        return;
-    }
-
-    // Set the icon to the "no account" icon.
-    ui->actionAccountsButton->setIcon(QIcon::fromTheme("noaccount"));
-    ui->actionAccountsButton->setText(tr("Accounts"));
-}
-
 bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
 {
     if (obj == view) {
@@ -801,26 +610,6 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
         }
     }
     return QMainWindow::eventFilter(obj, ev);
-}
-
-void MainWindow::updateNewsLabel()
-{
-    if (m_newsChecker->isLoadingNews()) {
-        newsLabel->setText(tr("Loading news..."));
-        newsLabel->setEnabled(false);
-        ui->actionMoreNews->setVisible(false);
-    } else {
-        QList<NewsEntryPtr> entries = m_newsChecker->getNewsEntries();
-        if (entries.length() > 0) {
-            newsLabel->setText(entries[0]->title);
-            newsLabel->setEnabled(true);
-            ui->actionMoreNews->setVisible(true);
-        } else {
-            newsLabel->setText(tr("No news available."));
-            newsLabel->setEnabled(false);
-            ui->actionMoreNews->setVisible(false);
-        }
-    }
 }
 
 void MainWindow::onCatToggled(bool state)
@@ -1030,14 +819,6 @@ void MainWindow::processURLs(QList<QUrl> urls)
                     dlUrlDialod.execWithTask(job.get());
                 }
 
-            } else if (url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME && !isExternalURLImport) {
-                QVariantMap receivedData;
-                const QUrlQuery query(url.query());
-                const auto items = query.queryItems();
-                for (auto it = items.begin(), end = items.end(); it != end; ++it)
-                    receivedData.insert(it->first, it->second);
-                emit APPLICATION->oauthReplyRecieved(receivedData);
-                continue;
             } else if ((url.scheme() == "prismlauncher" || url.scheme() == BuildConfig.LAUNCHER_APP_BINARY_NAME) && isExternalURLImport) {
                 // PrismLauncher URL protocol modpack import
                 // works for any prism fork
@@ -1350,11 +1131,6 @@ void MainWindow::on_actionViewCentralModsFolder_triggered()
     DesktopServices::openPath(APPLICATION->settings()->get("CentralModsDir").toString(), true);
 }
 
-void MainWindow::on_actionViewSkinsFolder_triggered()
-{
-    DesktopServices::openPath(APPLICATION->settings()->get("SkinsDir").toString(), true);
-}
-
 void MainWindow::on_actionViewIconThemeFolder_triggered()
 {
     DesktopServices::openPath(APPLICATION->themeManager()->getIconThemesFolder().path(), true);
@@ -1439,21 +1215,6 @@ void MainWindow::on_actionEditInstance_triggered()
     }
 }
 
-void MainWindow::on_actionManageSkins_triggered()
-{
-    auto account = APPLICATION->accounts()->defaultAccount();
-
-    if (account && (account->accountType() == AccountType::MSA) && !account->isActive()) {
-        SkinManageDialog dialog(this, account);
-        dialog.exec();
-    }
-}
-
-void MainWindow::on_actionManageAccounts_triggered()
-{
-    APPLICATION->ShowGlobalSettings(this, "accounts");
-}
-
 void MainWindow::on_actionReportBug_triggered()
 {
     DesktopServices::openUrl(QUrl(BuildConfig.BUG_TRACKER_URL));
@@ -1499,21 +1260,6 @@ void MainWindow::on_actionAddToPATH_triggered()
 void MainWindow::on_actionOpenWiki_triggered()
 {
     DesktopServices::openUrl(QUrl(BuildConfig.WIKI_URL));
-}
-
-void MainWindow::on_actionMoreNews_triggered()
-{
-    auto entries = m_newsChecker->getNewsEntries();
-    NewsDialog news_dialog(entries, this);
-    news_dialog.exec();
-}
-
-void MainWindow::newsButtonClicked()
-{
-    auto entries = m_newsChecker->getNewsEntries();
-    NewsDialog news_dialog(entries, this);
-    news_dialog.toggleArticleList();
-    news_dialog.exec();
 }
 
 void MainWindow::onCatChanged(int)
@@ -1668,17 +1414,6 @@ void MainWindow::on_actionKillInstance_triggered()
     if (m_selectedInstance && m_selectedInstance->isRunning()) {
         APPLICATION->kill(m_selectedInstance);
     }
-}
-
-void MainWindow::on_actionCreateInstanceShortcut_triggered()
-{
-    if (!m_selectedInstance)
-        return;
-
-    CreateShortcutDialog shortcutDlg(m_selectedInstance, this);
-    if (!shortcutDlg.exec())
-        return;
-    shortcutDlg.createShortcut();
 }
 
 void MainWindow::taskEnd()

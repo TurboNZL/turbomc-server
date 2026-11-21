@@ -548,7 +548,8 @@ void WorldListPage::on_actionJoin_triggered()
     }
     auto worldVariant = m_worlds->data(index, WorldList::ObjectRole);
     auto* world = static_cast<World*>(worldVariant.value<void*>());
-    APPLICATION->launch(m_inst, LaunchMode::Normal, std::make_shared<MinecraftTarget>(MinecraftTarget::parse(world->folderName(), true)));
+    Q_UNUSED(world);
+    APPLICATION->launch(m_inst);
 }
 
 #include "WorldListPage.moc"

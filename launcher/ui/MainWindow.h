@@ -44,11 +44,10 @@
 #include <QProcess>
 #include <QTimer>
 
-#include "minecraft/auth/MinecraftAccount.h"
+#include "tasks/Task.h"
+
 
 class EditableLabel;
-class LaunchController;
-class NewsChecker;
 class QLabel;
 class QTextEdit;
 class QToolButton;
@@ -119,7 +118,6 @@ class MainWindow : public QMainWindow {
     void on_actionViewJavaFolder_triggered();
     void on_actionViewTemplateFolder_triggered();
 
-    void on_actionViewSkinsFolder_triggered();
 
     void on_actionViewSelectedInstFolder_triggered();
 
@@ -129,9 +127,7 @@ class MainWindow : public QMainWindow {
 
     void on_actionSettings_triggered();
 
-    void on_actionManageSkins_triggered();
 
-    void on_actionManageAccounts_triggered();
 
     void on_actionReportBug_triggered();
 
@@ -143,9 +139,7 @@ class MainWindow : public QMainWindow {
 
     void on_actionOpenWiki_triggered();
 
-    void on_actionMoreNews_triggered();
 
-    void newsButtonClicked();
 
     void on_actionLaunchInstance_triggered();
 
@@ -169,7 +163,6 @@ class MainWindow : public QMainWindow {
 
     void on_actionEditInstance_triggered();
 
-    void on_actionCreateInstanceShortcut_triggered();
 
     void taskEnd();
 
@@ -198,13 +191,9 @@ class MainWindow : public QMainWindow {
 
     void startTask(Task* task);
 
-    void defaultAccountChanged();
 
-    void changeActiveAccount();
 
-    void repopulateAccountsMenu();
 
-    void updateNewsLabel();
 
     void konamiTriggered();
 
@@ -243,7 +232,6 @@ class MainWindow : public QMainWindow {
     // these are managed by Qt's memory management model!
     InstanceView* view = nullptr;
     InstanceProxyModel* proxymodel = nullptr;
-    QToolButton* newsLabel = nullptr;
     QLabel* m_statusLeft = nullptr;
     QLabel* m_statusCenter = nullptr;
     QToolButton* m_changeIconButton = nullptr;
@@ -254,7 +242,6 @@ class MainWindow : public QMainWindow {
     QToolButton* helpMenuButton = nullptr;
     KonamiCode* secretEventFilter = nullptr;
 
-    unique_qobject_ptr<NewsChecker> m_newsChecker;
 
     MinecraftInstance* m_selectedInstance = nullptr;
     QString m_currentInstIcon;

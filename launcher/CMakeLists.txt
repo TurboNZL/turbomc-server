@@ -789,12 +789,8 @@ SET(LAUNCHER_SOURCES
     ui/pages/instance/LogPage.cpp
     ui/pages/instance/LogPage.h
     ui/pages/instance/InstanceSettingsPage.h
-    ui/pages/instance/ScreenshotsPage.cpp
-    ui/pages/instance/ScreenshotsPage.h
     ui/pages/instance/OtherLogsPage.cpp
     ui/pages/instance/OtherLogsPage.h
-    ui/pages/instance/ServersPage.cpp
-    ui/pages/instance/ServersPage.h
     ui/pages/instance/WorldListPage.cpp
     ui/pages/instance/WorldListPage.h
     ui/pages/instance/McClient.cpp
@@ -805,8 +801,6 @@ SET(LAUNCHER_SOURCES
     ui/pages/instance/ServerPingTask.h
 
     # GUI - global settings pages
-    ui/pages/global/ExternalToolsPage.cpp
-    ui/pages/global/ExternalToolsPage.h
     ui/pages/global/JavaPage.cpp
     ui/pages/global/JavaPage.h
     ui/pages/global/LanguagePage.cpp
@@ -884,8 +878,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/AboutDialog.h
     ui/dialogs/CopyInstanceDialog.cpp
     ui/dialogs/CopyInstanceDialog.h
-    ui/dialogs/CreateShortcutDialog.cpp
-    ui/dialogs/CreateShortcutDialog.h
     ui/dialogs/CustomMessageBox.cpp
     ui/dialogs/CustomMessageBox.h
     ui/dialogs/ExportInstanceDialog.cpp

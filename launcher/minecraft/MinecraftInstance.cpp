@@ -297,61 +297,9 @@ QSet<QString> MinecraftInstance::traits() const
 // FIXME: move UI code out of MinecraftInstance
 void MinecraftInstance::populateLaunchMenu(QMenu* menu)
 {
-    QAction* normalLaunch = menu->addAction(tr("&Launch"));
-    normalLaunch->setShortcut(QKeySequence::Open);
-    QAction* normalLaunchOffline = menu->addAction(tr("Launch &Offline"));
-    normalLaunchOffline->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
-    QAction* normalLaunchDemo = menu->addAction(tr("Launch &Demo"));
-    normalLaunchDemo->setShortcut(QKeySequence(tr("Ctrl+Alt+O")));
-
-    normalLaunchDemo->setEnabled(supportsDemo());
-
-    connect(normalLaunch, &QAction::triggered, this, [this] { APPLICATION->launch(this); });
-    connect(normalLaunchOffline, &QAction::triggered, this, [this] { APPLICATION->launch(this, LaunchMode::Offline); });
-    connect(normalLaunchDemo, &QAction::triggered, this, [this] { APPLICATION->launch(this, LaunchMode::Demo); });
-
-    auto accounts = APPLICATION->accounts();
-    if (accounts->count() > 1) {
-        QMenu* launchAsMenu = menu->addMenu(tr("Launch &As"));
-        for (int i = 0; i < accounts->count(); i++) {
-            MinecraftAccountPtr account = accounts->at(i);
-            QAction* action = launchAsMenu->addAction(account->displayName());
-            if (auto face = account->getFace(); !face.isNull()) {
-                action->setIcon(face);
-            } else {
-                action->setIcon(QIcon::fromTheme("noaccount"));
-            }
-            connect(action, &QAction::triggered, this,
-                    [this, account] { APPLICATION->launch(this, LaunchMode::Normal, nullptr, account); });
-        }
-    }
-
-    QString profilersTitle = tr("Profilers");
-    menu->addSeparator()->setText(profilersTitle);
-
-    auto profilers = new QActionGroup(menu);
-    profilers->setExclusive(true);
-    connect(profilers, &QActionGroup::triggered, this, [this](QAction* action) {
-        settings()->set("Profiler", action->data());
-        emit profilerChanged();
-    });
-
-    QAction* noProfilerAction = menu->addAction(tr("&No Profiler"));
-    noProfilerAction->setData("");
-    noProfilerAction->setCheckable(true);
-    noProfilerAction->setChecked(true);
-    profilers->addAction(noProfilerAction);
-
-    for (auto profiler = APPLICATION->profilers().begin(); profiler != APPLICATION->profilers().end(); profiler++) {
-        QAction* profilerAction = menu->addAction(profiler.value()->name());
-        profilers->addAction(profilerAction);
-        profilerAction->setData(profiler.key());
-        profilerAction->setCheckable(true);
-        profilerAction->setChecked(settings()->get("Profiler").toString() == profiler.key());
-
-        QString error;
-        profilerAction->setEnabled(profiler.value()->check(&error));
-    }
+    QAction* start = menu->addAction(tr("&Start server"));
+    start->setShortcut(QKeySequence::Open);
+    connect(start, &QAction::triggered, this, [this] { APPLICATION->launch(this); });
 }
 
 QString MinecraftInstance::gameRoot() const
@@ -380,14 +328,6 @@ QString MinecraftInstance::getLocalLibraryPath() const
 {
     QDir libraries_dir(FS::PathCombine(instanceRoot(), "libraries/"));
     return libraries_dir.absolutePath();
-}
-
-bool MinecraftInstance::supportsDemo() const
-{
-    Version instance_ver{ getPackProfile()->getComponentVersion("net.minecraft") };
-    // Demo mode was introduced in 1.3.1: https://minecraft.wiki/w/Demo_mode#History
-    // FIXME: Due to Version constraints atm, this can't handle well non-release versions
-    return instance_ver >= Version("1.3.1");
 }
 
 QString MinecraftInstance::jarModsDir() const
@@ -580,7 +520,7 @@ QMap<QString, QString> MinecraftInstance::getVariables()
     out.insert("INST_DIR", QDir::toNativeSeparators(QDir(instanceRoot()).absolutePath()));
     out.insert("INST_MC_DIR", QDir::toNativeSeparators(QDir(gameRoot()).absolutePath()));
     out.insert("INST_JAVA", QDir::toNativeSeparators(QDir(settings()->get("JavaPath").toString()).absolutePath()));
-    out.insert("INST_JAVA_ARGS", javaArguments().join(' '));
+    out.insert("INST_JAVA_ARGS", extraArguments().join(' '));
     out.insert("NO_COLOR", "1");
 #ifdef Q_OS_MACOS
     // get library for Steam overlay support

@@ -45,7 +45,6 @@
 #include "Json.h"
 #include "minecraft/PackProfile.h"
 #include "minecraft/WorldList.h"
-#include "minecraft/auth/AccountList.h"
 #include "settings/Setting.h"
 
 MinecraftSettingsWidget::MinecraftSettingsWidget(MinecraftInstance* instance, QWidget* parent)
@@ -267,8 +266,6 @@ void MinecraftSettingsWidget::loadSettings()
 
         m_ui->serverJoinGroupBox->setChecked(settings->get("JoinServerOnLaunch").toBool());
 
-        m_ui->instanceAccountGroupBox->setChecked(settings->get("UseAccountForInstance").toBool());
-        updateAccountsMenu(*settings);
 
         auto blockSignalsCheckBoxes = { m_ui->neoForge, m_ui->forge,     m_ui->fabric,       m_ui->quilt,   m_ui->liteLoader,
                                         m_ui->babric,   m_ui->btaBabric, m_ui->legacyFabric, m_ui->ornithe, m_ui->rift };
@@ -496,22 +493,6 @@ void MinecraftSettingsWidget::saveSettings()
             settings->reset("JoinWorldOnLaunch");
         }
 
-        // Use an account for this instance
-        bool useAccountForInstance = m_ui->instanceAccountGroupBox->isChecked();
-        settings->set("UseAccountForInstance", useAccountForInstance);
-        if (useAccountForInstance) {
-            int accountIndex = m_ui->instanceAccountSelector->currentIndex();
-
-            if (accountIndex != -1) {
-                const MinecraftAccountPtr account = APPLICATION->accounts()->at(accountIndex);
-                if (account != nullptr) {
-                    settings->set("InstanceAccountId", account->profileId());
-                }
-            }
-        } else {
-            settings->reset("InstanceAccountId");
-        }
-
         settings->set("UseLatestMinecraftVersion", m_ui->latestMCVersionGroupBox->isChecked());
         settings->set("UseLatestMinecraftVersionType", m_ui->releaseRadioButton->isChecked() ? "release" : "any");
     }
@@ -543,28 +524,6 @@ void MinecraftSettingsWidget::openGlobalSettings()
         APPLICATION->ShowGlobalSettings(this, "java-settings");
     } else {  // TODO select tab
         APPLICATION->ShowGlobalSettings(this, "minecraft-settings");
-    }
-}
-
-void MinecraftSettingsWidget::updateAccountsMenu(SettingsObject& settings) const
-{
-    m_ui->instanceAccountSelector->clear();
-    auto* accounts = APPLICATION->accounts();
-    int accountIndex = accounts->findAccountByProfileId(settings.get("InstanceAccountId").toString());
-
-    for (int i = 0; i < accounts->count(); i++) {
-        MinecraftAccountPtr account = accounts->at(i);
-
-        QIcon face = account->getFace();
-
-        if (face.isNull()) {
-            face = QIcon::fromTheme("noaccount");
-        }
-
-        m_ui->instanceAccountSelector->addItem(face, account->profileName(), i);
-        if (i == accountIndex) {
-            m_ui->instanceAccountSelector->setCurrentIndex(i);
-        }
     }
 }
 
