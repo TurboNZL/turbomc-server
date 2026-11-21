@@ -209,23 +209,17 @@ void LogPage::setupControls()
 {
     auto* row = new QHBoxLayout();
     m_stateLabel = new QLabel(this);
-    m_startButton = new QPushButton(tr("Start"), this);
     m_stopButton = new QPushButton(tr("Stop"), this);
-    m_killButton = new QPushButton(tr("Kill"), this);
-    m_killButton->setToolTip(tr("Force the server to stop immediately. Unsaved world data may be lost."));
+    m_stopButton->setToolTip(tr("Ask the server to save the world and shut down."));
     m_commandEdit = new QLineEdit(this);
     m_commandEdit->setPlaceholderText(tr("Type a server command and press Enter (no leading /)"));
     row->addWidget(m_stateLabel);
-    row->addWidget(m_startButton);
     row->addWidget(m_stopButton);
-    row->addWidget(m_killButton);
     row->addWidget(m_commandEdit, 1);
     ui->gridLayout->addLayout(row, ui->gridLayout->rowCount(), 0, 1, -1);
 
     auto* server = m_instance->serverProcess();
-    connect(m_startButton, &QPushButton::clicked, this, &LogPage::startServer);
     connect(m_stopButton, &QPushButton::clicked, this, [server] { server->stop(); });
-    connect(m_killButton, &QPushButton::clicked, this, [server] { server->kill(); });
     connect(m_commandEdit, &QLineEdit::returnPressed, this, [this, server] {
         const QString command = m_commandEdit->text().trimmed();
         if (command.isEmpty()) {
@@ -259,32 +253,8 @@ void LogPage::updateControls()
             break;
     }
     m_stateLabel->setText(text);
-    m_startButton->setEnabled(state == State::Stopped);
     m_stopButton->setEnabled(state == State::Starting || state == State::Running);
-    m_killButton->setEnabled(state != State::Stopped);
     m_commandEdit->setEnabled(state == State::Starting || state == State::Running);
-}
-
-void LogPage::startServer()
-{
-    auto* server = m_instance->serverProcess();
-    QString error;
-    if (server->start(&error)) {
-        return;
-    }
-    if (error == "eula") {
-        const auto answer = QMessageBox::question(
-            this, tr("Minecraft EULA"),
-            tr("To run a Minecraft server you must accept the Minecraft End User License Agreement:\n"
-               "https://aka.ms/MinecraftEULA\n\nDo you accept it?"));
-        if (answer == QMessageBox::Yes && Server::Process::acceptEula(m_instance->gameRoot())) {
-            if (!server->start(&error)) {
-                QMessageBox::warning(this, tr("Could not start the server"), error);
-            }
-        }
-        return;
-    }
-    QMessageBox::warning(this, tr("Could not start the server"), error);
 }
 
 bool LogPage::apply()

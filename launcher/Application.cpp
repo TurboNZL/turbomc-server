@@ -1466,15 +1466,25 @@ bool Application::launch(BaseInstance* instance)
         showInstanceWindow(server, "console");
         return true;
     }
+    auto* window = showInstanceWindow(server, "console");
+    QWidget* parent = window ? static_cast<QWidget*>(window) : static_cast<QWidget*>(m_mainWindow);
     QString error;
-    if (!server->serverProcess()->start(&error)) {
-        // The window explains EULA and install problems to the user.
-        showInstanceWindow(server, "console");
-        qWarning() << "Could not start server" << server->id() << ":" << error;
+    if (server->serverProcess()->start(&error)) {
+        return true;
+    }
+    if (error == "eula") {
+        const auto answer = QMessageBox::question(
+            parent, tr("Minecraft EULA"),
+            tr("To run a Minecraft server you must accept the Minecraft End User License Agreement:\n"
+               "https://aka.ms/MinecraftEULA\n\nDo you accept it?"));
+        if (answer == QMessageBox::Yes && Server::Process::acceptEula(server->gameRoot())) {
+            return launch(instance);
+        }
         return false;
     }
-    showInstanceWindow(server, "console");
-    return true;
+    qWarning() << "Could not start server" << server->id() << ":" << error;
+    QMessageBox::warning(parent, tr("Could not start the server"), error);
+    return false;
 }
 
 bool Application::kill(BaseInstance* instance)

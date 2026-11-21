@@ -87,8 +87,8 @@ InstanceWindow::InstanceWindow(MinecraftInstance* instance, QWidget* parent) : Q
         horizontalLayout->addSpacerItem(spacer);
 
         m_launchButton = new QToolButton(this);
-        m_launchButton->setText(tr("&Launch"));
-        m_launchButton->setToolTip(tr("Launch the instance"));
+        m_launchButton->setText(tr("&Start"));
+        m_launchButton->setToolTip(tr("Start the server"));
         m_launchButton->setPopupMode(QToolButton::MenuButtonPopup);
         m_launchButton->setMinimumWidth(80);  // HACK!!
         horizontalLayout->addWidget(m_launchButton);
@@ -104,7 +104,7 @@ InstanceWindow::InstanceWindow(MinecraftInstance* instance, QWidget* parent) : Q
 
         m_killButton = new QPushButton(this);
         m_killButton->setText(tr("&Kill"));
-        m_killButton->setToolTip(tr("Kill the running instance"));
+        m_killButton->setToolTip(tr("Force the server to stop immediately"));
         m_killButton->setShortcut(QKeySequence(tr("Ctrl+K")));
         horizontalLayout->addWidget(m_killButton);
         connect(m_killButton, &QPushButton::clicked, this, [this] { APPLICATION->kill(m_instance); });

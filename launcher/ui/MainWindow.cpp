@@ -297,16 +297,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         connect(view, &InstanceView::groupStateChanged, APPLICATION->instances(), &InstanceList::on_GroupStateChanged);
         ui->horizontalLayout->addWidget(view);
     }
-    // The cat background
-    {
-        // set the cat action priority here so you can still see the action in qt designer
-        ui->actionCAT->setPriority(QAction::LowPriority);
-        m_catSeparator = ui->mainToolBar->insertSeparator(ui->actionCAT);
-        updateCatState();
-        connect(ui->actionCAT, &QAction::toggled, this, &MainWindow::onCatToggled);
-        connect(APPLICATION, &Application::currentCatChanged, this, &MainWindow::onCatChanged);
-    }
-
     // Togglable status bar
     {
         bool statusBarVisible = APPLICATION->settings()->get("StatusBarVisible").toBool();
@@ -424,7 +414,6 @@ void MainWindow::lockToolbars(bool state)
 {
     ui->mainToolBar->setMovable(!state);
     ui->instanceToolBar->setMovable(!state);
-    ui->newsToolBar->setMovable(!state);
     APPLICATION->settings()->set("ToolbarsLocked", state);
 }
 
@@ -438,14 +427,12 @@ void MainWindow::konamiTriggered()
         ui->mainToolBar->setStyleSheet("");
         ui->instanceToolBar->setStyleSheet("");
         ui->centralWidget->setStyleSheet("");
-        ui->newsToolBar->setStyleSheet("");
         ui->statusBar->setStyleSheet("");
         qDebug() << "Super Secret Mode DEACTIVATED!";
     } else {
         ui->mainToolBar->setStyleSheet(stylesheet);
         ui->instanceToolBar->setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1," + gradient);
         ui->centralWidget->setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1," + gradient);
-        ui->newsToolBar->setStyleSheet(stylesheet);
         ui->statusBar->setStyleSheet(stylesheet);
         qDebug() << "Super Secret Mode ACTIVATED!";
     }
@@ -634,9 +621,6 @@ void MainWindow::updateCatState()
         catVisible = false;
     }
 
-    ui->actionCAT->setVisible(catEnabled);
-    m_catSeparator->setVisible(catEnabled);
-    ui->actionCAT->setChecked(catVisible);
     setCatBackground(catVisible);
 }
 
@@ -1554,7 +1538,6 @@ void MainWindow::setInstanceActionsEnabled(bool enabled)
     ui->actionExportInstance->setEnabled(enabled);
     ui->actionDeleteInstance->setEnabled(enabled);
     ui->actionCopyInstance->setEnabled(enabled);
-    ui->actionCreateInstanceShortcut->setEnabled(enabled);
 }
 
 void MainWindow::refreshCurrentInstance()

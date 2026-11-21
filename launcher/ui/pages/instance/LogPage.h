@@ -96,14 +96,11 @@ class LogPage : public QWidget, public BasePage {
     void UIToModelState();
     void setupControls();
     void updateControls();
-    void startServer();
 
    private:
     Ui::LogPage* ui;
     MinecraftInstance* m_instance;
-    QPushButton* m_startButton = nullptr;
     QPushButton* m_stopButton = nullptr;
-    QPushButton* m_killButton = nullptr;
     QLabel* m_stateLabel = nullptr;
     QLineEdit* m_commandEdit = nullptr;
 
