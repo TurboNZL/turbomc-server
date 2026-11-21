@@ -65,7 +65,6 @@
 
 #include "ui/pages/modplatform/ServerPage.h"
 #include "ui/pages/modplatform/ImportPage.h"
-#include "ui/pages/modplatform/flame/FlamePage.h"
 #include "ui/pages/modplatform/modrinth/ModrinthPage.h"
 #include "ui/widgets/PageContainer.h"
 
@@ -241,9 +240,6 @@ QList<BasePage*> NewInstanceDialog::getPages()
 
     pages.append(new ServerPage(this));
     pages.append(m_importPage);
-    if (APPLICATION->capabilities() & Application::SupportsFlame) {
-        pages.append(new FlamePage(this));
-    }
     pages.append(new ModrinthPage(this));
 
     return pages;

@@ -460,7 +460,7 @@
           <item>
            <widget class="QCheckBox" name="downloadsDirWatchRecursiveCheckBox">
             <property name="toolTip">
-             <string>When enabled, in addition to the downloads folder, its sub folders will also be searched when looking for resources (e.g. when looking for blocked mods on CurseForge).</string>
+             <string>When enabled, in addition to the downloads folder, its sub folders will also be searched when looking for resources.</string>
             </property>
             <property name="text">
              <string>Check &amp;subfolders for blocked mods</string>
@@ -480,7 +480,7 @@
           <item>
            <widget class="QCheckBox" name="metadataEnableBtn">
             <property name="toolTip">
-             <string>Store version information provided by mod providers (like Modrinth or CurseForge) for mods.</string>
+             <string>Store version information provided by mod providers (like Modrinth) for mods.</string>
             </property>
             <property name="text">
              <string>Keep track of mod metadata</string>

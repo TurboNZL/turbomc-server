@@ -124,7 +124,7 @@ class MinecraftInstance : public BaseInstance {
     Server::Process* serverProcess();
     Server::Software serverSoftware() const;
     QString serverMcVersion() const;
-    /// Mod/plugin loaders to filter Modrinth/CurseForge searches with.
+    /// Mod/plugin loaders to filter Modrinth searches with.
     ModPlatform::ModLoaderTypes addonLoaders() const;
 
     //////  Launch stuff //////

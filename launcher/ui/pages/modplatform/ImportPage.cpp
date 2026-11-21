@@ -47,7 +47,6 @@
 #include "ui/dialogs/CustomMessageBox.h"
 #include "ui/dialogs/NewInstanceDialog.h"
 
-#include "modplatform/flame/FlameAPI.h"
 
 #include "Json.h"
 
@@ -121,63 +120,6 @@ void ImportPage::updateState()
                 dialog->setSuggestedPack(fi.completeBaseName(), new InstanceImportTask(url, false, this, std::move(extra_info)));
                 dialog->setSuggestedIcon("default");
             }
-        } else if (url.scheme() == "curseforge") {
-            // need to find the download link for the modpack
-            // format of url curseforge://install?addonId=IDHERE&fileId=IDHERE
-            QUrlQuery query(url);
-            if (query.allQueryItemValues("addonId").isEmpty() || query.allQueryItemValues("fileId").isEmpty()) {
-                qDebug() << "Invalid curseforge link:" << url;
-                return;
-            }
-            auto addonId = query.allQueryItemValues("addonId")[0];
-            auto fileId = query.allQueryItemValues("fileId")[0];
-
-            auto [job, array] = FlameAPI::getFile(addonId, fileId);
-
-            connect(job.get(), &NetJob::failed, this, [this](const QString& reason) {
-                CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->show();
-            });
-            connect(job.get(), &NetJob::succeeded, this, [this, array, addonId, fileId] {
-                qDebug() << "Returned CFURL Json:\n" << array->toStdString().c_str();
-                auto doc = Json::requireDocument(*array);
-                if (!doc) {
-                    CustomMessageBox::selectable(this, tr("Error"), doc.error(), QMessageBox::Critical)->show();
-                    return;
-                }
-                auto data = doc->object()["data"].toObject();
-                // No way to find out if it's a mod or a modpack before here
-                // And also we need to check if it ends with .zip, instead of any better way
-                auto fileName = data["fileName"].toString();
-                if (fileName.endsWith(".zip")) {
-                    // Have to use ensureString then use QUrl to get proper url encoding
-                    auto dl_url = QUrl(data["downloadUrl"].toString(""));
-                    if (!dl_url.isValid()) {
-                        CustomMessageBox::selectable(
-                            this, tr("Error"),
-                            tr("The modpack %1 is blocked for third-parties! Please download it manually.").arg(fileName),
-                            QMessageBox::Critical)
-                            ->show();
-                        return;
-                    }
-
-                    QFileInfo dl_file(dl_url.fileName());
-                    QString pack_name = data["displayName"].toString(dl_file.completeBaseName());
-
-                    QMap<QString, QString> extra_info;
-                    extra_info.insert("pack_id", addonId);
-                    extra_info.insert("pack_version_id", fileId);
-
-                    dialog->setSuggestedPack(pack_name, new InstanceImportTask(dl_url, false, this, std::move(extra_info)));
-                    dialog->setSuggestedIcon("default");
-
-                } else {
-                    CustomMessageBox::selectable(this, tr("Error"), tr("This url isn't a valid modpack !"), QMessageBox::Critical)->show();
-                }
-            });
-            ProgressDialog dlUrlDialod(this);
-            dlUrlDialod.showSkipButton();
-            dlUrlDialod.execWithTask(job.get());
-            return;
         } else {
             if (input.endsWith("?client=y")) {
                 input.chop(9);

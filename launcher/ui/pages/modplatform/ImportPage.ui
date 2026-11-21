@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <ui version="4.0">
  <class>ImportPage</class>
  <widget class="QWidget" name="ImportPage">
@@ -31,16 +31,6 @@
       <widget class="QLabel" name="label">
        <property name="text">
         <string>The following file types are implemented (both for local files and URLs):</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>- CurseForge modpacks (ZIP / curseforge:// URL)</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -101,6 +91,6 @@
    </item>
   </layout>
  </widget>
- <resources/>
- <connections/>
+ <resources />
+ <connections />
 </ui>

@@ -113,12 +113,8 @@ auto V1::createModFormat([[maybe_unused]] const QDir& indexDir, ModPlatform::Ind
     mod.name = modPack.name;
     mod.filename = modVersion.fileName;
 
-    if (modPack.provider == ModPlatform::ResourceProvider::FLAME) {
-        mod.mode = "metadata:curseforge";
-    } else {
-        mod.mode = "url";
-        mod.url = modVersion.downloadUrl;
-    }
+    mod.mode = "url";
+    mod.url = modVersion.downloadUrl;
 
     mod.hashFormat = modVersion.hashType;
     mod.hash = modVersion.hash;
@@ -172,16 +168,6 @@ void V1::updateModIndex(const QDir& indexDir, Mod& mod)
 
     toml::table update;
     switch (mod.provider) {
-        case (ModPlatform::ResourceProvider::FLAME):
-            if (mod.fileId.toInt() == 0 || mod.projectId.toInt() == 0) {
-                qCritical() << QString("Did not write file %1 because missing information!").arg(normalizedFname);
-                return;
-            }
-            update = toml::table{
-                { "file-id", mod.fileId.toInt() },
-                { "project-id", mod.projectId.toInt() },
-            };
-            break;
         case (ModPlatform::ResourceProvider::MODRINTH):
             if (mod.modId().toString().isEmpty() || mod.version().toString().isEmpty()) {
                 qCritical() << QString("Did not write file %1 because missing information!").arg(normalizedFname);
@@ -352,13 +338,7 @@ auto V1::getIndexForMod(const QDir& indexDir, const QString& slug) -> Mod
             return {};
         }
 
-        auto* modProviderTable = updateTable[ModPlatform::ProviderCapabilities::name(Provider::FLAME)].as_table();
-        if (modProviderTable != nullptr) {
-            mod.provider = Provider::FLAME;
-            mod.fileId = intEntry(*modProviderTable, "file-id");
-            mod.projectId = intEntry(*modProviderTable, "project-id");
-        } else {
-            modProviderTable = updateTable[ModPlatform::ProviderCapabilities::name(Provider::MODRINTH)].as_table();
+        auto* modProviderTable = updateTable[ModPlatform::ProviderCapabilities::name(Provider::MODRINTH)].as_table();
             if (modProviderTable != nullptr) {
                 mod.provider = Provider::MODRINTH;
                 mod.modId() = stringEntry(*modProviderTable, "mod-id");
@@ -367,7 +347,6 @@ auto V1::getIndexForMod(const QDir& indexDir, const QString& slug) -> Mod
                 qCritical() << QString("No mod provider on mod metadata!");
                 return {};
             }
-        }
     }
     {  // dependencies
         auto* deps = table["x-prismlauncher-dependencies"].as_array();

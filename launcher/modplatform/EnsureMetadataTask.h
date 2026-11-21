@@ -31,8 +31,6 @@ class EnsureMetadataTask : public Task {
     Task::Ptr modrinthVersionsTask();
     Task::Ptr modrinthProjectsTask();
 
-    Task::Ptr flameVersionsTask();
-    Task::Ptr flameProjectsTask();
 
     // Helpers
     enum class RemoveFromList : std::uint8_t { Yes, No };

@@ -10,7 +10,7 @@
 
 namespace Hashing {
 
-enum class Algorithm { Md4, Md5, Sha1, Sha256, Sha512, Murmur2, Unknown };
+enum class Algorithm { Md4, Md5, Sha1, Sha256, Sha512, Unknown };
 
 QString algorithmToString(Algorithm type);
 Algorithm algorithmFromString(QString type);

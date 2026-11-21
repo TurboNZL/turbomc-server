@@ -37,7 +37,7 @@ No Docker, no panel, no web server to babysit.
 | 🔁 **Change versions easily** | Switch software or version from the **Server version** page. Nothing updates on its own. |
 | 🖥️ **Live console** | Start, stop (graceful, with a save) or kill. Type commands, search the log, colour-coded warnings and errors. |
 | 📜 **EULA handled** | The Minecraft EULA is shown once, and only you can accept it. |
-| 🧩 **Mods and plugins** | Browse and install from Modrinth (CurseForge with your own API key), filtered to what your server software can load. *Still being tested.* |
+| 🧩 **Mods and plugins** | Browse and install from Modrinth, filtered to what your server software can load. *Still being tested.* |
 | ☕ **Java aware** | The Java version each Minecraft release needs is looked up and recorded. |
 
 ### Supported server software
@@ -112,9 +112,8 @@ Run it with `LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib ./build/prismlauncher` (the b
 
 ### API keys
 
-This build ships with **no third-party API keys**. Modrinth needs none. To enable CurseForge, get your own key from the
-[CurseForge developer console](https://console.curseforge.com/) and configure with
-`-DLauncher_CURSEFORGE_API_KEY=<your key>`. Prism Launcher's keys are not reused here.
+This build ships with **no third-party API keys**. Modrinth needs none, and Prism Launcher's keys are not reused here.
+CurseForge is intentionally not supported.
 
 ## 🤝 Community & support
 
@@ -128,7 +127,7 @@ TurboMC Server stands on the shoulders of:
 - **[Prism Launcher](https://prismlauncher.org)** and its contributors, the code this project is forked from
 - **[PolyMC](https://github.com/PolyMC/PolyMC)** and **[MultiMC](https://github.com/MultiMC/Launcher)**, where Prism came from
 - **[PaperMC](https://papermc.io)**, **[Purpur](https://purpurmc.org)**, **[FabricMC](https://fabricmc.net)** and **Mojang**, whose servers it installs
-- **[Modrinth](https://modrinth.com)** and **[CurseForge](https://www.curseforge.com)** for their mod platforms
+- **[Modrinth](https://modrinth.com)** for the mod and plugin platform
 
 Full copyright and licence notices are in [COPYING.md](COPYING.md).
 

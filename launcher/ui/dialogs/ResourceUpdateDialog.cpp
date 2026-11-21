@@ -8,7 +8,6 @@
 #include "StringUtils.h"
 #include "minecraft/mod/tasks/GetModDependenciesTask.h"
 #include "modplatform/ModIndex.h"
-#include "modplatform/flame/FlameAPI.h"
 #include "tasks/SequentialTask.h"
 #include "ui_ReviewMessageBox.h"
 
@@ -20,7 +19,6 @@
 #include "minecraft/PackProfile.h"
 
 #include "modplatform/EnsureMetadataTask.h"
-#include "modplatform/flame/FlameCheckUpdate.h"
 #include "modplatform/modrinth/ModrinthCheckUpdate.h"
 
 #include <QClipboard>
@@ -35,16 +33,9 @@ std::vector<Version> mcVersions(MinecraftInstance* inst)
 {
     return { Version(inst->serverMcVersion()) };
 }
-ModPlatform::ResourceProvider next(ModPlatform::ResourceProvider p)
+ModPlatform::ResourceProvider next(ModPlatform::ResourceProvider)
 {
-    switch (p) {
-        case ModPlatform::ResourceProvider::MODRINTH:
-            return ModPlatform::ResourceProvider::FLAME;
-        case ModPlatform::ResourceProvider::FLAME:
-            return ModPlatform::ResourceProvider::MODRINTH;
-    }
-
-    return ModPlatform::ResourceProvider::FLAME;
+    return ModPlatform::ResourceProvider::MODRINTH;
 }
 
 }  // namespace
@@ -120,15 +111,6 @@ void ResourceUpdateDialog::checkCandidates()
         checkTask.addTask(m_modrinthCheckTask);
     }
 
-    if (!m_flameToUpdate.empty()) {
-        m_flameCheckTask.reset(new FlameCheckUpdate(m_flameToUpdate, versions, m_loadersList, m_resourceModel, m_releaseTypes));
-        connect(m_flameCheckTask.get(), &CheckUpdateTask::checkFailed, this,
-                [this](Resource* resource, const QString& reason, const QUrl& recoverUrl) {
-                    m_failedCheckUpdate.append({ resource, reason, recoverUrl });
-                });
-        checkTask.addTask(m_flameCheckTask);
-    }
-
     connect(&checkTask, &Task::failed, this,
             [this](const QString& reason) { CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->exec(); });
 
@@ -164,18 +146,6 @@ void ResourceUpdateDialog::checkCandidates()
             m_tasks.insert(updatable.name, updatable.download);
         }
         selectedVers.append(m_modrinthCheckTask->getDependencies());
-    }
-
-    // Add found updated for Flame
-    if (m_flameCheckTask) {
-        auto flameUpdates = m_flameCheckTask->getUpdates();
-        for (auto& updatable : flameUpdates) {
-            qDebug() << QString("Mod %1 has an update available!").arg(updatable.name);
-
-            appendResource(updatable);
-            m_tasks.insert(updatable.name, updatable.download);
-        }
-        selectedVers.append(m_flameCheckTask->getDependencies());
     }
 
     // Report failed update checking
@@ -259,9 +229,6 @@ void ResourceUpdateDialog::checkCandidates()
 
             for (const auto& dep : depTask->getDependecies()) {
                 auto changelog = dep->version.changelog;
-                if (dep->pack->provider == ModPlatform::ResourceProvider::FLAME) {
-                    changelog = FlameAPI::getModFileChangelog(dep->version.addonId.toInt(), dep->version.fileId.toInt());
-                }
 
                 auto [maybeInstalled, requiredByNames, requiredByIds] = dependencyExtraInfo.value(dep->version.addonId.toString());
                 auto downloadTask =
@@ -309,7 +276,6 @@ auto ResourceUpdateDialog::ensureMetadata() -> bool
     // A better use of data structures here could remove the need for this QHash
     QHash<QString, bool> shouldTryOthers;
     QList<Resource*> modrinthTmp;
-    QList<Resource*> flameTmp;
 
     bool confirmRest = false;
     bool tryOthersRest = false;
@@ -317,13 +283,10 @@ auto ResourceUpdateDialog::ensureMetadata() -> bool
     ModPlatform::ResourceProvider providerRest = ModPlatform::ResourceProvider::MODRINTH;
 
     // adds resource to list based on provider
-    auto addToTmp = [&modrinthTmp, &flameTmp](Resource* resource, ModPlatform::ResourceProvider p) {
+    auto addToTmp = [&modrinthTmp](Resource* resource, ModPlatform::ResourceProvider p) {
         switch (p) {
             case ModPlatform::ResourceProvider::MODRINTH:
                 modrinthTmp.push_back(resource);
-                break;
-            case ModPlatform::ResourceProvider::FLAME:
-                flameTmp.push_back(resource);
                 break;
         }
     };
@@ -392,23 +355,6 @@ auto ResourceUpdateDialog::ensureMetadata() -> bool
         seq.addTask(modrinthTask);
     }
 
-    // prepare task for the flame mods
-    if (!flameTmp.empty()) {
-        auto flameTask = makeShared<EnsureMetadataTask>(flameTmp, indexDir2, ModPlatform::ResourceProvider::FLAME);
-        connect(flameTask.get(), &EnsureMetadataTask::metadataReady, this, [this](Resource* candidate) { onMetadataEnsured(candidate); });
-        connect(flameTask.get(), &EnsureMetadataTask::metadataFailed, this, [this, &shouldTryOthers](Resource* candidate) {
-            onMetadataFailed(candidate, shouldTryOthers.find(candidate->internalId()).value(), ModPlatform::ResourceProvider::FLAME);
-        });
-        connect(flameTask.get(), &EnsureMetadataTask::failed, this,
-                [this](const QString& reason) { CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->exec(); });
-
-        if (flameTask->getHashingTask()) {
-            seq.addTask(flameTask->getHashingTask());
-        }
-
-        seq.addTask(flameTask);
-    }
-
     seq.addTask(m_secondTryMetadata);
 
     // execute all the tasks
@@ -430,9 +376,6 @@ void ResourceUpdateDialog::onMetadataEnsured(Resource* resource)
     switch (resource->metadata()->provider) {
         case ModPlatform::ResourceProvider::MODRINTH:
             m_modrinthToUpdate.push_back(resource);
-            break;
-        case ModPlatform::ResourceProvider::FLAME:
-            m_flameToUpdate.push_back(resource);
             break;
     }
 }

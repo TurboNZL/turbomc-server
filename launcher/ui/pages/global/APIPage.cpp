@@ -146,8 +146,6 @@ void APIPage::loadSettings()
     ui->resourceURL->setText(resourceURL);
     QString fmlLibsURL = s->get("LegacyFMLLibsURLOverride").toString();
     ui->legacyFMLLibsURL->setText(fmlLibsURL);
-    QString flameKey = s->get("FlameKeyOverride").toString();
-    ui->flameKey->setText(flameKey);
     QString modrinthToken = s->get("ModrinthToken").toString();
     ui->modrinthToken->setText(modrinthToken);
     QString customUserAgent = s->get("UserAgentOverride").toString();
@@ -194,8 +192,6 @@ void APIPage::applySettings()
     s->set("MetaURLOverride", metaURL.toString());
     s->set("ResourceURLOverride", resourceURL.toString());
     s->set("LegacyFMLLibsURLOverride", fmlLibsURL.toString());
-    QString flameKey = ui->flameKey->text();
-    s->set("FlameKeyOverride", flameKey);
     QString modrinthToken = ui->modrinthToken->text();
     s->set("ModrinthToken", modrinthToken);
     s->set("UserAgentOverride", ui->userAgentLineEdit->text());

@@ -30,7 +30,7 @@ QString softwareKey(Software software);   ///< stable id stored in instance.cfg 
 QString softwareName(Software software);  ///< display name
 Software softwareFromKey(const QString& key);
 
-/// Mod/plugin loaders the software accepts; used to filter Modrinth/CurseForge searches.
+/// Mod/plugin loaders the software accepts; used to filter Modrinth searches.
 ModPlatform::ModLoaderTypes modLoaders(Software software);
 
 /// True for software that loads plugins/mods at all (everything but vanilla).

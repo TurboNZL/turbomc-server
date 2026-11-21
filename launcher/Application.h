@@ -96,7 +96,6 @@ class Application : public QApplication {
     enum Capability : std::uint8_t {
         None = 0U,
 
-        SupportsFlame = 1U << 1U,
         SupportsGameMode = 1U << 2U,
         SupportsMangoHud = 1U << 3U,
     };
@@ -147,7 +146,6 @@ class Application : public QApplication {
      */
     QString getJarPath(const QString& jarFile);
 
-    QString getFlameAPIKey();
     QString getModrinthAPIToken();
     QString getUserAgent();
 

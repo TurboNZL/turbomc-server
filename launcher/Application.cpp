@@ -859,8 +859,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
         // Custom Microsoft Authentication Client ID
 
-        // Custom Flame API Key
-        m_settings->registerSetting({ "FlameKeyOverride", "CFKeyOverride" }, "");
 
         m_settings->registerSetting("FallbackMRBlockedMods", true);
         m_settings->registerSetting("ModrinthToken", "");
@@ -981,8 +979,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_metacache->addBase("ATLauncherPacks", QDir("cache/ATLauncherPacks").absolutePath());
         m_metacache->addBase("FTBPacks", QDir("cache/FTBPacks").absolutePath());
         m_metacache->addBase("TechnicPacks", QDir("cache/TechnicPacks").absolutePath());
-        m_metacache->addBase("FlamePacks", QDir("cache/FlamePacks").absolutePath());
-        m_metacache->addBase("FlameMods", QDir("cache/FlameMods").absolutePath());
         m_metacache->addBase("ModrinthPacks", QDir("cache/ModrinthPacks").absolutePath());
         m_metacache->addBase("ModrinthModpacks", QDir("cache/ModrinthModpacks").absolutePath());
         m_metacache->addBase("translations", QDir("translations").absolutePath());
@@ -1721,9 +1717,6 @@ Meta::Index* Application::metadataIndex()
 void Application::updateCapabilities()
 {
     m_capabilities = None;
-    if (!getFlameAPIKey().isEmpty()) {
-        m_capabilities |= SupportsFlame;
-    }
 
 #ifdef Q_OS_LINUX
 #ifdef ENABLE_GAMEMODE
@@ -1768,16 +1761,6 @@ QString Application::getJarPath(const QString& jarFile)
         }
     }
     return {};
-}
-
-QString Application::getFlameAPIKey()
-{
-    QString keyOverride = m_settings->get("FlameKeyOverride").toString();
-    if (!keyOverride.isEmpty()) {
-        return keyOverride;
-    }
-
-    return BuildConfig.FLAME_API_KEY;
 }
 
 QString Application::getModrinthAPIToken()

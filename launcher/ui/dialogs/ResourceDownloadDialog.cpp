@@ -43,10 +43,8 @@
 
 #include "ui/pages/modplatform/ResourcePage.h"
 
-#include "ui/pages/modplatform/flame/FlameResourcePages.h"
 #include "ui/pages/modplatform/modrinth/ModrinthResourcePages.h"
 
-#include "modplatform/flame/FlameAPI.h"
 #include "modplatform/modrinth/ModrinthAPI.h"
 #include "ui/widgets/PageContainer.h"
 
@@ -343,9 +341,6 @@ void ResourceDownloadDialog::setResourceMetadata(const std::shared_ptr<Metadata:
         case ModPlatform::ResourceProvider::MODRINTH:
             selectPage(Modrinth::id());
             break;
-        case ModPlatform::ResourceProvider::FLAME:
-            selectPage(Flame::id());
-            break;
     }
 
     setWindowTitle(tr("Change %1 version").arg(meta->name));
@@ -397,11 +392,6 @@ ResourceDownloadDialog* ResourceDownloadDialog::createMod(QWidget* parent,
         page->setSuppressInitialSearch(suppressInitialSearch);
         pages.append(page);
     }
-    if (APPLICATION->capabilities() & Application::SupportsFlame && FlameAPI::validateModLoaders(loaders)) {
-        auto* flamePage = Flame::createModPage(dialog, *instance);
-        flamePage->setSuppressInitialSearch(suppressInitialSearch);
-        pages.append(flamePage);
-    }
     dialog->initPages(pages);
     return dialog;
 }
@@ -417,11 +407,6 @@ ResourceDownloadDialog* ResourceDownloadDialog::createResourcePack(QWidget* pare
     auto* page = Modrinth::createResourcePackResourcePage(dialog, *instance);
     page->setSuppressInitialSearch(suppressInitialSearch);
     pages.append(page);
-    if (APPLICATION->capabilities() & Application::SupportsFlame) {
-        auto* flamePage = Flame::createResourcePackResourcePage(dialog, *instance);
-        flamePage->setSuppressInitialSearch(suppressInitialSearch);
-        pages.append(flamePage);
-    }
     dialog->initPages(pages);
 
     return dialog;
@@ -438,11 +423,6 @@ ResourceDownloadDialog* ResourceDownloadDialog::createTexturePack(QWidget* paren
     auto* page = Modrinth::createTexturePackResourcePage(dialog, *instance);
     page->setSuppressInitialSearch(suppressInitialSearch);
     pages.append(page);
-    if (APPLICATION->capabilities() & Application::SupportsFlame) {
-        auto* flamePage = Flame::createTexturePackResourcePage(dialog, *instance);
-        flamePage->setSuppressInitialSearch(suppressInitialSearch);
-        pages.append(flamePage);
-    }
     dialog->initPages(pages);
 
     return dialog;
@@ -459,11 +439,6 @@ ResourceDownloadDialog* ResourceDownloadDialog::createShaderPack(QWidget* parent
     auto* page = Modrinth::createShaderPackResourcePage(dialog, *instance);
     page->setSuppressInitialSearch(suppressInitialSearch);
     pages.append(page);
-    if (APPLICATION->capabilities() & Application::SupportsFlame) {
-        auto* flamePage = Flame::createShaderPackResourcePage(dialog, *instance);
-        flamePage->setSuppressInitialSearch(suppressInitialSearch);
-        pages.append(flamePage);
-    }
     dialog->initPages(pages);
 
     return dialog;
@@ -480,11 +455,6 @@ ResourceDownloadDialog* ResourceDownloadDialog::createDataPack(QWidget* parent,
     auto* page = Modrinth::createDataPackResourcePage(dialog, *instance);
     page->setSuppressInitialSearch(suppressInitialSearch);
     pages.append(page);
-    if (APPLICATION->capabilities() & Application::SupportsFlame) {
-        auto* flamePage = Flame::createDataPackResourcePage(dialog, *instance);
-        flamePage->setSuppressInitialSearch(suppressInitialSearch);
-        pages.append(flamePage);
-    }
     dialog->initPages(pages);
 
     return dialog;

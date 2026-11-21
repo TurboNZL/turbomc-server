@@ -28,7 +28,6 @@
 #include "minecraft/mod/ModFolderModel.h"
 #include "modplatform/ModIndex.h"
 #include "modplatform/ResourceAPI.h"
-#include "modplatform/flame/FlameAPI.h"
 #include "modplatform/modrinth/ModrinthAPI.h"
 #include "tasks/SequentialTask.h"
 #include "tasks/Task.h"
@@ -59,11 +58,8 @@ class GetModDependenciesTask : public SequentialTask {
     QHash<QString, PackDependencyExtraInfo> getExtraInfo();
 
    private:
-    static const ResourceAPI* getAPI(ModPlatform::ResourceProvider provider)
+    static const ResourceAPI* getAPI(ModPlatform::ResourceProvider)
     {
-        if (provider == ModPlatform::ResourceProvider::FLAME) {
-            return &FlameAPI::get();
-        }
         return &ModrinthAPI::get();
     }
 

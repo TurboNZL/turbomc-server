@@ -154,11 +154,6 @@ class Config {
     QString MSA_CLIENT_ID;
 
     /**
-     * Client API key for CurseForge
-     */
-    QString FLAME_API_KEY;
-
-    /**
      * Metadata repository URL prefix
      */
     QString META_URL;
@@ -197,8 +192,6 @@ class Config {
     QStringList MODRINTH_MRPACK_HOSTS{ "cdn.modrinth.com", "github.com", "raw.githubusercontent.com", "gitlab.com" };
     QString MODRINTH_DOWNLOAD_HOST = "cdn.modrinth.com";
 
-    QString FLAME_BASE_URL = "https://api.curseforge.com/v1";
-    QString FLAME_DOWNLOAD_HOST = "edge.forgecdn.net";
 
     QString versionString() const;
     /**

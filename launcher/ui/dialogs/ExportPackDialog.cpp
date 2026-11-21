@@ -19,7 +19,6 @@
 #include "ExportPackDialog.h"
 #include "minecraft/mod/ResourceFolderModel.h"
 #include "modplatform/ModIndex.h"
-#include "modplatform/flame/FlamePackExportTask.h"
 #include "ui/dialogs/CustomMessageBox.h"
 #include "ui/dialogs/ProgressDialog.h"
 #include "ui_ExportPackDialog.h"
@@ -36,7 +35,7 @@
 ExportPackDialog::ExportPackDialog(MinecraftInstance* instance, QWidget* parent, ModPlatform::ResourceProvider provider)
     : QDialog(parent), m_instance(instance), m_ui(new Ui::ExportPackDialog), m_provider(provider)
 {
-    Q_ASSERT(m_provider == ModPlatform::ResourceProvider::MODRINTH || m_provider == ModPlatform::ResourceProvider::FLAME);
+    Q_ASSERT(m_provider == ModPlatform::ResourceProvider::MODRINTH);
 
     m_ui->setupUi(this);
     m_ui->name->setPlaceholderText(instance->name());
@@ -55,26 +54,6 @@ ExportPackDialog::ExportPackDialog(MinecraftInstance* instance, QWidget* parent,
         m_ui->recommendedMemoryWidget->hide();
 
         m_ui->summary->setPlainText(instance->settings()->get("ExportSummary").toString());
-    } else {
-        setWindowTitle(tr("Export CurseForge Pack"));
-
-        m_ui->summaryLabel->hide();
-        m_ui->summary->hide();
-
-        const int recommendedRAM = instance->settings()->get("ExportRecommendedRAM").toInt();
-
-        if (recommendedRAM > 0) {
-            m_ui->recommendedMemoryCheckBox->setChecked(true);
-            m_ui->recommendedMemory->setValue(recommendedRAM);
-        } else {
-            m_ui->recommendedMemoryCheckBox->setChecked(false);
-
-            // recommend based on setting - limited to 12 GiB (CurseForge warns above this amount)
-            const int defaultRecommendation = qMin(m_instance->settings()->get("MaxMemAlloc").toInt(), 1024 * 12);
-            m_ui->recommendedMemory->setValue(defaultRecommendation);
-        }
-
-        m_ui->author->setText(instance->settings()->get("ExportAuthor").toString());
     }
 
     // ensure a valid pack is generated
@@ -147,14 +126,6 @@ void ExportPackDialog::done(int result)
 
     if (m_provider == ModPlatform::ResourceProvider::MODRINTH)
         settings->set("ExportSummary", m_ui->summary->toPlainText());
-    else {
-        settings->set("ExportAuthor", m_ui->author->text());
-
-        if (m_ui->recommendedMemoryCheckBox->isChecked())
-            settings->set("ExportRecommendedRAM", m_ui->recommendedMemory->value());
-        else
-            settings->reset("ExportRecommendedRAM");
-    }
 
     if (result == Accepted) {
         const QString name = m_ui->name->text().isEmpty() ? m_instance->name() : m_ui->name->text();
@@ -168,33 +139,11 @@ void ExportPackDialog::done(int result)
                 return;
             if (!(output.endsWith(".zip") || output.endsWith(".mrpack")))
                 output.append(".mrpack");
-        } else {
-            output = QFileDialog::getSaveFileName(this, tr("Export %1").arg(name), FS::PathCombine(QDir::homePath(), filename + ".zip"),
-                                                  tr("CurseForge pack") + " (*.zip)", nullptr);
-            if (output.isEmpty())
-                return;
-            if (!output.endsWith(".zip"))
-                output.append(".zip");
         }
 
         Task* task;
-        if (m_provider == ModPlatform::ResourceProvider::MODRINTH) {
             task = new ModrinthPackExportTask(name, m_ui->version->text(), m_ui->summary->toPlainText(), m_ui->optionalFiles->isChecked(),
                                               m_instance, output, std::bind(&FileIgnoreProxy::filterFile, m_proxy, std::placeholders::_1));
-        } else {
-            FlamePackExportOptions options{};
-
-            options.name = name;
-            options.version = m_ui->version->text();
-            options.author = m_ui->author->text();
-            options.optionalFiles = m_ui->optionalFiles->isChecked();
-            options.instance = m_instance;
-            options.output = output;
-            options.filter = std::bind(&FileIgnoreProxy::filterFile, m_proxy, std::placeholders::_1);
-            options.recommendedRAM = m_ui->recommendedMemoryCheckBox->isChecked() ? m_ui->recommendedMemory->value() : 0;
-
-            task = new FlamePackExportTask(std::move(options));
-        }
 
         connect(task, &Task::failed, this,
                 [this](const QString reason) { CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->show(); });

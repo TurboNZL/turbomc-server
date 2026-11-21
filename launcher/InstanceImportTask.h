@@ -53,7 +53,6 @@ class InstanceImportTask : public InstanceTask {
 
    private:
     void processMultiMC();
-    void processFlame();
     void processModrinth();
     void downloadFromUrl();
 
@@ -69,7 +68,6 @@ class InstanceImportTask : public InstanceTask {
     enum class ModpackType : std::uint8_t {
         Unknown,
         MultiMC,
-        Flame,
         Modrinth,
     } m_modpackType = ModpackType::Unknown;
 

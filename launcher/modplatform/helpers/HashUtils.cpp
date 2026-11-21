@@ -5,8 +5,6 @@
 #include <QFile>
 #include <QtConcurrentRun>
 
-#include <MurmurHash2.h>
-
 namespace Hashing {
 
 Hasher::Ptr createHasher(QString file_path, ModPlatform::ResourceProvider provider)
@@ -15,8 +13,6 @@ Hasher::Ptr createHasher(QString file_path, ModPlatform::ResourceProvider provid
         case ModPlatform::ResourceProvider::MODRINTH:
             return makeShared<Hasher>(file_path,
                                       ModPlatform::ProviderCapabilities::hashType(ModPlatform::ResourceProvider::MODRINTH).first());
-        case ModPlatform::ResourceProvider::FLAME:
-            return makeShared<Hasher>(file_path, Algorithm::Murmur2);
         default:
             qCritical() << "[Hashing]" << "Unrecognized mod platform!";
             return nullptr;
@@ -27,19 +23,6 @@ Hasher::Ptr createHasher(QString file_path, QString type)
 {
     return makeShared<Hasher>(file_path, type);
 }
-
-class QIODeviceReader : public Murmur2::Reader {
-   public:
-    QIODeviceReader(QIODevice* device) : m_device(device) {}
-    virtual ~QIODeviceReader() = default;
-    virtual int read(char* s, int n) { return m_device->read(s, n); }
-    virtual bool eof() { return m_device->atEnd(); }
-    virtual void goToBeginning() { m_device->seek(0); }
-    virtual void close() { m_device->close(); }
-
-   private:
-    QIODevice* m_device;
-};
 
 QString algorithmToString(Algorithm type)
 {
@@ -54,8 +37,6 @@ QString algorithmToString(Algorithm type)
             return "sha256";
         case Algorithm::Sha512:
             return "sha512";
-        case Algorithm::Murmur2:
-            return "murmur2";
         // case Algorithm::Unknown:
         default:
             break;
@@ -75,8 +56,6 @@ Algorithm algorithmFromString(QString type)
         return Algorithm::Sha256;
     if (type == "sha512")
         return Algorithm::Sha512;
-    if (type == "murmur2")
-        return Algorithm::Murmur2;
     return Algorithm::Unknown;
 }
 
@@ -101,13 +80,6 @@ QString hash(QIODevice* device, Algorithm type)
         case Algorithm::Sha512:
             alg = QCryptographicHash::Algorithm::Sha512;
             break;
-        case Algorithm::Murmur2: {  // CF-specific
-            auto should_filter_out = [](char c) { return (c == 9 || c == 10 || c == 13 || c == 32); };
-            auto reader = std::make_unique<QIODeviceReader>(device);
-            auto result = QString::number(Murmur2::hash(reader.get(), 4 * MiB, should_filter_out));
-            device->close();
-            return result;
-        }
         case Algorithm::Unknown:
             device->close();
             return "";

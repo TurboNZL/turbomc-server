@@ -273,12 +273,6 @@ endif()
 # https://docs.microsoft.com/en-us/legal/microsoft-identity-platform/terms-of-use
 set(Launcher_MSA_CLIENT_ID "" CACHE STRING "Client ID you can get from Microsoft Identity Platform when you register an application")
 
-# By using this key in your builds you accept the terms and conditions laid down in
-# https://support.curseforge.com/en/support/solutions/articles/9000207405-curse-forge-3rd-party-api-terms-and-conditions
-# NOTE: CurseForge requires you to change this if you make any kind of derivative work.
-# This key was issued specifically for Prism Launcher
-set(Launcher_CURSEFORGE_API_KEY "" CACHE STRING "API key for the CurseForge platform")
-
 set(Launcher_COMPILER_NAME ${CMAKE_CXX_COMPILER_ID})
 set(Launcher_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 set(Launcher_COMPILER_TARGET_SYSTEM ${CMAKE_SYSTEM_NAME})
@@ -534,7 +528,6 @@ add_subdirectory(libraries/javacheck) # java compatibility checker
 
 add_subdirectory(libraries/rainbow) # Qt extension for colors
 add_subdirectory(libraries/LocalPeer) # fork of a library from Qt solutions
-add_subdirectory(libraries/murmur2) # Hash for usage with the CurseForge API
 add_subdirectory(libraries/qdcss) # css parser
 
 ############################### Built Artifacts ###############################

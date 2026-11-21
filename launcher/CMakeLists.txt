@@ -206,6 +206,8 @@ set(MINECRAFT_SOURCES
 
 
     minecraft/GradleSpecifier.h
+    server/ServerBackup.cpp
+    server/ServerBackup.h
     server/ServerCreationTask.cpp
     server/ServerCreationTask.h
     server/ServerInstallTask.cpp
@@ -214,6 +216,8 @@ set(MINECRAFT_SOURCES
     server/ServerLookup.h
     server/ServerProcess.cpp
     server/ServerProcess.h
+    server/ServerProperties.cpp
+    server/ServerProperties.h
     server/ServerTypes.cpp
     server/ServerTypes.h
 
@@ -410,10 +414,6 @@ set(API_SOURCES
 
     modplatform/CheckUpdateTask.h
 
-    modplatform/flame/FlameAPI.h
-    modplatform/flame/FlameAPI.cpp
-    modplatform/flame/FlamePackIndex.h
-    modplatform/flame/FlamePackIndex.cpp
     modplatform/modrinth/ModrinthAPI.h
     modplatform/modrinth/ModrinthAPI.cpp
     modplatform/helpers/HashUtils.h
@@ -433,18 +433,6 @@ set(FTB_SOURCES
 
 set(FLAME_SOURCES
     # Flame
-    modplatform/flame/FlameModIndex.cpp
-    modplatform/flame/FlameModIndex.h
-    modplatform/flame/PackManifest.h
-    modplatform/flame/PackManifest.cpp
-    modplatform/flame/FileResolvingTask.h
-    modplatform/flame/FileResolvingTask.cpp
-    modplatform/flame/FlameCheckUpdate.cpp
-    modplatform/flame/FlameCheckUpdate.h
-    modplatform/flame/FlameInstanceCreationTask.h
-    modplatform/flame/FlameInstanceCreationTask.cpp
-    modplatform/flame/FlamePackExportTask.h
-    modplatform/flame/FlamePackExportTask.cpp
 )
 
 set(MODRINTH_SOURCES
@@ -783,8 +771,6 @@ SET(LAUNCHER_SOURCES
     ui/pages/instance/ExternalResourcesPage.h
     ui/pages/instance/ServerVersionPage.cpp
     ui/pages/instance/ServerVersionPage.h
-    ui/pages/instance/ManagedPackPage.cpp
-    ui/pages/instance/ManagedPackPage.h
     ui/pages/instance/DataPackPage.h
     ui/pages/instance/DataPackPage.cpp
     ui/pages/instance/TexturePackPage.h
@@ -860,14 +846,6 @@ SET(LAUNCHER_SOURCES
 
 
 
-    ui/pages/modplatform/flame/FlameModel.cpp
-    ui/pages/modplatform/flame/FlameModel.h
-    ui/pages/modplatform/flame/FlamePage.cpp
-    ui/pages/modplatform/flame/FlamePage.h
-    ui/pages/modplatform/flame/FlameResourceModels.cpp
-    ui/pages/modplatform/flame/FlameResourceModels.h
-    ui/pages/modplatform/flame/FlameResourcePages.cpp
-    ui/pages/modplatform/flame/FlameResourcePages.h
 
     ui/pages/modplatform/modrinth/ModrinthPage.cpp
     ui/pages/modplatform/modrinth/ModrinthPage.h
@@ -1072,7 +1050,6 @@ if(${Launcher_USE_PCH})
 endif()
 
 target_link_libraries(Launcher_logic
-    Launcher_murmur2
     nbt++
     ${ZLIB_LIBRARIES}
     qdcss
