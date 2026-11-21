@@ -49,6 +49,35 @@ bundle_deps "$LIB/libQt6Gui.so.6"
 for extra in libQt6XcbQpa.so.6 libQt6WaylandClient.so.6 libQt6DBus.so.6 libQt6OpenGL.so.6 libQt6Svg.so.6; do
     [ -e "$QT/lib/$extra" ] && cp -naL "$QT/lib/$extra" "$LIB/" || true
 done
+
+# The third-party libraries above pull in their own dependencies (libarchive -> libxml2, ICU, nettle, ...), and
+# distributions disagree on those versions (for example libxml2.so.2 vs .so.16). Bundle that whole closure, except
+# for libraries every Linux desktop provides in a stable form (C library, GL/EGL, X11/xcb, fonts, D-Bus, GLib).
+is_universal() {
+    case "$(basename "$1")" in
+        libc.so*|libm.so*|libdl.so*|libpthread.so*|librt.so*|libresolv.so*|libutil.so*|libgcc_s.so*|libstdc++.so*|ld-linux*|linux-vdso*) return 0 ;;
+        libGL.so*|libGLX.so*|libGLdispatch.so*|libOpenGL.so*|libEGL.so*|libvulkan.so*|libdrm.so*|libgbm.so*|libwayland*) return 0 ;;
+        libX*|libxcb*|libxkb*|libfontconfig.so*|libfreetype.so*|libpng*.so*|libz.so*|libdbus-1.so*|libsystemd.so*) return 0 ;;
+        libglib-2*|libgobject-2*|libgio-2*|libgmodule-2*|libgthread-2*|libffi.so*|libpcre2*|libmount.so*|libblkid.so*|libselinux.so*|libcap.so*) return 0 ;;
+    esac
+    return 1
+}
+queue=$(ls "$LIB"/libarchive.so* "$LIB"/libcmark.so* "$LIB"/libtomlplusplus.so* 2>/dev/null || true)
+while [ -n "$queue" ]; do
+    next=""
+    for f in $queue; do
+        for dep in $(LD_LIBRARY_PATH="$QT/lib" ldd "$f" 2>/dev/null | awk '/=> \// {print $3}'); do
+            case "$dep" in "$QT"/*) continue ;; esac
+            is_universal "$dep" && continue
+            if [ ! -e "$LIB/$(basename "$dep")" ]; then
+                cp -L "$dep" "$LIB/"
+                next="$next $LIB/$(basename "$dep")"
+            fi
+        done
+    done
+    queue=$next
+done
+
 strip --strip-unneeded "$LIB"/*.so* "$ROOT/$APP/bin/$NAME" 2>/dev/null || true
 
 echo "== wrapper, desktop integration"
