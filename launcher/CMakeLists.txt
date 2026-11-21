@@ -179,10 +179,6 @@ set(PRISM_UPDATE_SOURCES
 # Backend for the news bar... there's usually no news.
 set(NEWS_SOURCES
     # News System
-    news/NewsChecker.h
-    news/NewsChecker.cpp
-    news/NewsEntry.h
-    news/NewsEntry.cpp
 )
 
 # Icon interface
@@ -200,37 +196,8 @@ set(MINECRAFT_SOURCES
     minecraft/Logging.cpp
 
     # Minecraft support
-    minecraft/auth/AccountData.cpp
-    minecraft/auth/AccountData.h
-    minecraft/auth/AccountList.cpp
-    minecraft/auth/AccountList.h
-    minecraft/auth/AuthSession.cpp
-    minecraft/auth/AuthSession.h
-    minecraft/auth/AuthStep.h
-    minecraft/auth/MinecraftAccount.cpp
-    minecraft/auth/MinecraftAccount.h
-    minecraft/auth/Parsers.cpp
-    minecraft/auth/Parsers.h
 
-    minecraft/auth/AuthFlow.cpp
-    minecraft/auth/AuthFlow.h
 
-    minecraft/auth/steps/EntitlementsStep.cpp
-    minecraft/auth/steps/EntitlementsStep.h
-    minecraft/auth/steps/GetSkinStep.cpp
-    minecraft/auth/steps/GetSkinStep.h
-    minecraft/auth/steps/LauncherLoginStep.cpp
-    minecraft/auth/steps/LauncherLoginStep.h
-    minecraft/auth/steps/MinecraftProfileStep.cpp
-    minecraft/auth/steps/MinecraftProfileStep.h
-    minecraft/auth/steps/MSADeviceCodeStep.cpp
-    minecraft/auth/steps/MSADeviceCodeStep.h
-    minecraft/auth/steps/MSAStep.cpp
-    minecraft/auth/steps/MSAStep.h
-    minecraft/auth/steps/XboxAuthorizationStep.cpp
-    minecraft/auth/steps/XboxAuthorizationStep.h
-    minecraft/auth/steps/XboxUserStep.cpp
-    minecraft/auth/steps/XboxUserStep.h
 
     minecraft/update/AssetUpdateTask.h
     minecraft/update/AssetUpdateTask.cpp
@@ -361,20 +328,11 @@ set(MINECRAFT_SOURCES
     minecraft/AssetsUtils.cpp
 
     # Minecraft skins
-    minecraft/skins/SkinRequests.cpp
-    minecraft/skins/SkinRequests.h
-    minecraft/skins/SkinModel.cpp
-    minecraft/skins/SkinModel.h
-    minecraft/skins/SkinList.cpp
-    minecraft/skins/SkinList.h
 
     minecraft/Agent.h)
 
 # the screenshots feature
 set(SCREENSHOTS_SOURCES
-    screenshots/Screenshot.h
-    screenshots/ImgurAPI.h
-    screenshots/ImgurAPI.cpp
 )
 
 set(TASKS_SOURCES
@@ -441,16 +399,6 @@ set(TRANSLATIONS_SOURCES
 
 set(TOOLS_SOURCES
     # Tools
-    tools/BaseExternalTool.cpp
-    tools/BaseExternalTool.h
-    tools/BaseProfiler.cpp
-    tools/BaseProfiler.h
-    tools/JProfiler.cpp
-    tools/JProfiler.h
-    tools/JVisualVM.cpp
-    tools/JVisualVM.h
-    tools/GenericProfiler.cpp
-    tools/GenericProfiler.h
 )
 
 set(META_SOURCES
@@ -497,24 +445,9 @@ set(API_SOURCES
 )
 
 set(FTB_SOURCES
-    modplatform/legacy_ftb/PackFetchTask.h
-    modplatform/legacy_ftb/PackFetchTask.cpp
-    modplatform/legacy_ftb/PackInstallTask.h
-    modplatform/legacy_ftb/PackInstallTask.cpp
-    modplatform/legacy_ftb/PrivatePackManager.h
-    modplatform/legacy_ftb/PrivatePackManager.cpp
 
-    modplatform/legacy_ftb/PackHelpers.h
 
-    modplatform/import_ftb/PackInstallTask.h
-    modplatform/import_ftb/PackInstallTask.cpp
-    modplatform/import_ftb/PackHelpers.h
-    modplatform/import_ftb/PackHelpers.cpp
 
-    modplatform/ftb/FTBPackInstallTask.h
-    modplatform/ftb/FTBPackInstallTask.cpp
-    modplatform/ftb/FTBPackManifest.h
-    modplatform/ftb/FTBPackManifest.cpp
 )
 
 set(FLAME_SOURCES
@@ -551,25 +484,9 @@ set(PACKWIZ_SOURCES
 
 
 set(TECHNIC_SOURCES
-    modplatform/technic/SingleZipPackInstallTask.h
-    modplatform/technic/SingleZipPackInstallTask.cpp
-    modplatform/technic/SolderPackInstallTask.h
-    modplatform/technic/SolderPackInstallTask.cpp
-    modplatform/technic/SolderPackManifest.h
-    modplatform/technic/SolderPackManifest.cpp
-    modplatform/technic/TechnicPackProcessor.h
-    modplatform/technic/TechnicPackProcessor.cpp
 )
 
 set(ATLAUNCHER_SOURCES
-    modplatform/atlauncher/ATLPackIndex.cpp
-    modplatform/atlauncher/ATLPackIndex.h
-    modplatform/atlauncher/ATLPackInstallTask.cpp
-    modplatform/atlauncher/ATLPackInstallTask.h
-    modplatform/atlauncher/ATLPackManifest.cpp
-    modplatform/atlauncher/ATLPackManifest.h
-    modplatform/atlauncher/ATLShareCode.cpp
-    modplatform/atlauncher/ATLShareCode.h
 )
 
 set(LINKEXE_SOURCES
@@ -922,8 +839,6 @@ SET(LAUNCHER_SOURCES
     ui/pages/instance/ServerPingTask.h
 
     # GUI - global settings pages
-    ui/pages/global/AccountListPage.cpp
-    ui/pages/global/AccountListPage.h
     ui/pages/global/ExternalToolsPage.cpp
     ui/pages/global/ExternalToolsPage.h
     ui/pages/global/JavaPage.cpp
@@ -970,33 +885,9 @@ SET(LAUNCHER_SOURCES
 
     ui/pages/modplatform/ModpackProviderBasePage.h
 
-    ui/pages/modplatform/atlauncher/AtlFilterModel.cpp
-    ui/pages/modplatform/atlauncher/AtlFilterModel.h
-    ui/pages/modplatform/atlauncher/AtlListModel.cpp
-    ui/pages/modplatform/atlauncher/AtlListModel.h
-    ui/pages/modplatform/atlauncher/AtlOptionalModDialog.cpp
-    ui/pages/modplatform/atlauncher/AtlOptionalModDialog.h
-    ui/pages/modplatform/atlauncher/AtlPage.cpp
-    ui/pages/modplatform/atlauncher/AtlPage.h
-    ui/pages/modplatform/atlauncher/AtlUserInteractionSupportImpl.cpp
-    ui/pages/modplatform/atlauncher/AtlUserInteractionSupportImpl.h
 
-    ui/pages/modplatform/ftb/FtbFilterModel.cpp
-    ui/pages/modplatform/ftb/FtbFilterModel.h
-    ui/pages/modplatform/ftb/FtbListModel.cpp
-    ui/pages/modplatform/ftb/FtbListModel.h
-    ui/pages/modplatform/ftb/FtbPage.cpp
-    ui/pages/modplatform/ftb/FtbPage.h
 
-    ui/pages/modplatform/legacy_ftb/Page.cpp
-    ui/pages/modplatform/legacy_ftb/Page.h
-    ui/pages/modplatform/legacy_ftb/ListModel.h
-    ui/pages/modplatform/legacy_ftb/ListModel.cpp
 
-    ui/pages/modplatform/import_ftb/ImportFTBPage.cpp
-    ui/pages/modplatform/import_ftb/ImportFTBPage.h
-    ui/pages/modplatform/import_ftb/ListModel.h
-    ui/pages/modplatform/import_ftb/ListModel.cpp
 
     ui/pages/modplatform/flame/FlameModel.cpp
     ui/pages/modplatform/flame/FlameModel.h
@@ -1012,10 +903,6 @@ SET(LAUNCHER_SOURCES
     ui/pages/modplatform/modrinth/ModrinthModel.cpp
     ui/pages/modplatform/modrinth/ModrinthModel.h
 
-    ui/pages/modplatform/technic/TechnicModel.cpp
-    ui/pages/modplatform/technic/TechnicModel.h
-    ui/pages/modplatform/technic/TechnicPage.cpp
-    ui/pages/modplatform/technic/TechnicPage.h
 
     ui/pages/modplatform/ImportPage.cpp
     ui/pages/modplatform/ImportPage.h
@@ -1029,10 +916,6 @@ SET(LAUNCHER_SOURCES
     # GUI - dialogs
     ui/dialogs/AboutDialog.cpp
     ui/dialogs/AboutDialog.h
-    ui/dialogs/ProfileSelectDialog.cpp
-    ui/dialogs/ProfileSelectDialog.h
-    ui/dialogs/ProfileSetupDialog.cpp
-    ui/dialogs/ProfileSetupDialog.h
     ui/dialogs/CopyInstanceDialog.cpp
     ui/dialogs/CopyInstanceDialog.h
     ui/dialogs/CreateShortcutDialog.cpp
@@ -1049,8 +932,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/IconPickerDialog.h
     ui/dialogs/ImportResourceDialog.cpp
     ui/dialogs/ImportResourceDialog.h
-    ui/dialogs/MSALoginDialog.cpp
-    ui/dialogs/MSALoginDialog.h
     ui/dialogs/NetworkJobFailedDialog.cpp
     ui/dialogs/NetworkJobFailedDialog.h
     ui/dialogs/NewComponentDialog.cpp
@@ -1079,20 +960,10 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/ResourceUpdateDialog.h
     ui/dialogs/InstallLoaderDialog.cpp
     ui/dialogs/InstallLoaderDialog.h
-    ui/dialogs/ChooseOfflineNameDialog.cpp
-    ui/dialogs/ChooseOfflineNameDialog.h
     ui/dialogs/UntrustedModsDialog.cpp
     ui/dialogs/UntrustedModsDialog.h
 
-    ui/dialogs/skins/SkinManageDialog.cpp
-    ui/dialogs/skins/SkinManageDialog.h
 
-    ui/dialogs/skins/draw/SkinOpenGLWindow.h
-    ui/dialogs/skins/draw/SkinOpenGLWindow.cpp
-    ui/dialogs/skins/draw/Scene.h
-    ui/dialogs/skins/draw/Scene.cpp
-    ui/dialogs/skins/draw/BoxGeometry.h
-    ui/dialogs/skins/draw/BoxGeometry.cpp
 
     # GUI - widgets
     ui/widgets/CheckComboBox.cpp
