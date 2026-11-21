@@ -62,19 +62,34 @@ tested on Vanilla, Paper, Purpur and Fabric), but a lot is still on the way. The
 | Start, stop, kill, live console with commands | ✅ |
 | Switch software / version | ✅ |
 | Modrinth mods and plugins for the installed software | 🚧 wired up, needs more testing |
-| `server.properties` editor | 🚧 |
-| World backups, with an automatic one before version changes | 🚧 |
+| `server.properties` editor | ✅ |
+| World backups (restore, delete), with an automatic one before version changes | ✅ |
 | playit.gg tunnel manager (run only while the server runs) | 📋 |
 | Port-forwarding helpers (UPnP, port-clash check) | 📋 |
 | Automatic Java selection per server | 📋 |
 | World / folder size view | 📋 |
 | Optional, opt-in update checks | 📋 |
 | Quilt, experimental Rust servers | 📋 |
-| `.deb`, AppImage, Windows and macOS builds | 📋 |
+| Linux `.deb` (Qt bundled), built by CI | 🚧 untested CI |
+| AppImage, Windows and macOS builds | 📋 |
 
 ✅ done · 🚧 in progress · 📋 planned
 
 **Nothing updates automatically.** Version changes, mod updates and tunnels only happen when you ask for them.
+
+## 📦 Installing (early builds)
+
+Linux (Debian / Ubuntu) builds are published as a rolling **nightly** release of the latest commit on `main`:
+[Releases → Nightly](https://github.com/TurboNZL/turbomc-server/releases/tag/nightly).
+
+```bash
+sudo apt install ./turbomc-server_*.deb
+turbomc-server
+```
+
+The package bundles Qt, so it does not depend on your distribution's Qt version. You need a **Java** runtime to run
+servers (`default-jre-headless` is pulled in; newer Minecraft versions need a newer Java, which you can point the app at in Settings).
+TurboMC Server keeps its data in `~/.local/share/TurboMCServer`, separate from any Prism Launcher install.
 
 ## 🔨 Building
 
@@ -105,8 +120,9 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build build
 ```
 
-Run it with `LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib ./build/prismlauncher` (the binary is still called
-`prismlauncher` for now; renaming is on the to-do list).
+Run it with `LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib ./build/turbomc-server`.
+
+To make a `.deb` with Qt bundled: `scripts/package-linux.sh build ~/Qt/6.8.3/gcc_64 0.1.0 dist`.
 
 </details>
 
