@@ -1008,6 +1008,13 @@ bool PackProfile::setComponentVersion(const QString& uid, const QString& version
 
 QString PackProfile::getComponentVersion(const QString& uid) const
 {
+    // A server instance records its Minecraft version in its own settings.
+    if (uid == "net.minecraft") {
+        const auto serverVersion = d->m_instance->serverMcVersion();
+        if (!serverVersion.isEmpty()) {
+            return serverVersion;
+        }
+    }
     const auto iter = d->componentIndex.find(uid);
     if (iter != d->componentIndex.end()) {
         return (*iter)->getVersion();
@@ -1028,22 +1035,8 @@ void PackProfile::disableInteraction(bool disable)
 
 std::optional<ModPlatform::ModLoaderTypes> PackProfile::getModLoaders()
 {
-    ModPlatform::ModLoaderTypes result;
-    bool has_any_loader = false;
-
-    QMapIterator<QString, ModloaderMapEntry> i(Component::KNOWN_MODLOADERS);
-
-    while (i.hasNext()) {
-        i.next();
-        if (auto c = getComponent(i.key()); c != nullptr && c->isEnabled()) {
-            result |= i.value().type;
-            has_any_loader = true;
-        }
-    }
-
-    if (!has_any_loader)
-        return {};
-    return result;
+    // The loaders (plugin APIs / mod loader) come from the installed server software.
+    return d->m_instance->addonLoaders();
 }
 
 std::optional<ModPlatform::ModLoaderTypes> PackProfile::getSupportedModLoaders()
@@ -1062,20 +1055,10 @@ std::optional<ModPlatform::ModLoaderTypes> PackProfile::getSupportedModLoaders()
 
 QList<ModPlatform::ModLoaderType> PackProfile::getModLoadersList()
 {
-    QList<ModPlatform::ModLoaderType> result;
-    for (auto c : d->components) {
-        if (c->isEnabled() && Component::KNOWN_MODLOADERS.contains(c->getID())) {
-            result.append(Component::KNOWN_MODLOADERS[c->getID()].type);
-        }
-    }
-
+    auto result = ModPlatform::modLoaderTypesToList(d->m_instance->addonLoaders());
     // TODO: remove this or add version condition once Quilt drops official Fabric support
     if (result.contains(ModPlatform::Quilt) && !result.contains(ModPlatform::Fabric)) {
         result.append(ModPlatform::Fabric);
-    }
-    if (getComponentVersion("net.minecraft") == "1.20.1" && result.contains(ModPlatform::NeoForge) &&
-        !result.contains(ModPlatform::Forge)) {
-        result.append(ModPlatform::Forge);
     }
     return result;
 }

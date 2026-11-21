@@ -38,7 +38,7 @@ namespace {
 
 Version mcVersion(MinecraftInstance* inst)
 {
-    return inst->getPackProfile()->getComponent("net.minecraft")->getVersion();
+    return Version(inst->serverMcVersion());
 }
 
 ModPlatform::ModLoaderTypes mcLoaders(MinecraftInstance* inst)

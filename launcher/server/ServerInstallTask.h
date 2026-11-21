@@ -16,9 +16,11 @@ class InstallTask : public Task {
    public:
     InstallTask(MinecraftInstance* instance, Software software, QString mcVersion);
 
+   public:
+    bool abort() override;
+
    protected:
     void executeTask() override;
-    bool abort() override;
 
    private:
     void download(const Download& info);

@@ -33,7 +33,7 @@
 namespace {
 std::vector<Version> mcVersions(MinecraftInstance* inst)
 {
-    return { inst->getPackProfile()->getComponent("net.minecraft")->getVersion() };
+    return { Version(inst->serverMcVersion()) };
 }
 ModPlatform::ResourceProvider next(ModPlatform::ResourceProvider p)
 {

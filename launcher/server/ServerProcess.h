@@ -6,6 +6,8 @@
 #include <QTimer>
 
 #include "MessageLevel.h"
+#include "QObjectPtr.h"
+#include "launch/LogModel.h"
 
 class MinecraftInstance;
 
@@ -35,6 +37,11 @@ class Process : public QObject {
     void kill();
     void sendCommand(const QString& command);
 
+    /// Everything the server (and this manager) printed; survives restarts of the server.
+    shared_qobject_ptr<LogModel> logModel() const { return m_log; }
+    /// Appends a line to the log and notifies listeners.
+    void log(const QString& text, MessageLevel level);
+
     QStringList javaArguments() const;
     QString javaPath() const;
 
@@ -55,6 +62,7 @@ class Process : public QObject {
 
     MinecraftInstance* m_instance;
     QProcess m_process;
+    shared_qobject_ptr<LogModel> m_log;
     QTimer m_killTimer;
     State m_state = State::Stopped;
     QByteArray m_buffer;

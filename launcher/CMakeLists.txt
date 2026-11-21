@@ -206,6 +206,8 @@ set(MINECRAFT_SOURCES
 
 
     minecraft/GradleSpecifier.h
+    server/ServerCreationTask.cpp
+    server/ServerCreationTask.h
     server/ServerInstallTask.cpp
     server/ServerInstallTask.h
     server/ServerLookup.cpp
@@ -779,8 +781,8 @@ SET(LAUNCHER_SOURCES
     # GUI - instance pages
     ui/pages/instance/ExternalResourcesPage.cpp
     ui/pages/instance/ExternalResourcesPage.h
-    ui/pages/instance/VersionPage.cpp
-    ui/pages/instance/VersionPage.h
+    ui/pages/instance/ServerVersionPage.cpp
+    ui/pages/instance/ServerVersionPage.h
     ui/pages/instance/ManagedPackPage.cpp
     ui/pages/instance/ManagedPackPage.h
     ui/pages/instance/DataPackPage.h
@@ -824,8 +826,8 @@ SET(LAUNCHER_SOURCES
     ui/pages/global/APIPage.h
 
     # GUI - platform pages
-    ui/pages/modplatform/CustomPage.cpp
-    ui/pages/modplatform/CustomPage.h
+    ui/pages/modplatform/ServerPage.cpp
+    ui/pages/modplatform/ServerPage.h
 
     ui/pages/modplatform/ResourcePage.cpp
     ui/pages/modplatform/ResourcePage.h

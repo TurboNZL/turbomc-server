@@ -36,6 +36,11 @@
  */
 
 #include "LogPage.h"
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
 #include "ui_LogPage.h"
 
 #include "Application.h"
@@ -128,7 +133,7 @@ QModelIndex LogFormatProxyModel::find(const QModelIndex& start, const QString& v
     return QModelIndex();
 }
 
-LogPage::LogPage(BaseInstance* instance, QWidget* parent) : QWidget(parent), ui(new Ui::LogPage), m_instance(instance)
+LogPage::LogPage(MinecraftInstance* instance, QWidget* parent) : QWidget(parent), ui(new Ui::LogPage), m_instance(instance)
 {
     ui->setupUi(this);
 
@@ -147,14 +152,11 @@ LogPage::LogPage(BaseInstance* instance, QWidget* parent) : QWidget(parent), ui(
 
     ui->text->setModel(m_proxy);
 
-    // set up instance and launch process recognition
-    {
-        auto launchTask = m_instance->getLaunchTask();
-        if (launchTask) {
-            setInstanceLaunchTaskChanged(launchTask, true);
-        }
-        connect(m_instance, &BaseInstance::launchTaskChanged, this, &LogPage::onInstanceLaunchTaskChanged);
-    }
+    // the server process owns one log that survives restarts of the server
+    m_model = m_instance->serverProcess()->logModel();
+    m_proxy->setSourceModel(m_model.get());
+    modelStateToUI();
+    setupControls();
 
     auto findShortcut = new QShortcut(QKeySequence(QKeySequence::Find), this);
     connect(findShortcut, &QShortcut::activated, this, &LogPage::findActivated);
@@ -203,26 +205,86 @@ void LogPage::UIToModelState()
     m_model->suspend(ui->trackLogCheckbox->checkState() != Qt::Checked);
 }
 
-void LogPage::setInstanceLaunchTaskChanged(LaunchTask* proc, bool initial)
+void LogPage::setupControls()
 {
-    m_process = proc;
-    if (m_process) {
-        m_model = proc->getLogModel();
-        m_proxy->setSourceModel(m_model.get());
-        if (initial) {
-            modelStateToUI();
-        } else {
-            UIToModelState();
+    auto* row = new QHBoxLayout();
+    m_stateLabel = new QLabel(this);
+    m_startButton = new QPushButton(tr("Start"), this);
+    m_stopButton = new QPushButton(tr("Stop"), this);
+    m_killButton = new QPushButton(tr("Kill"), this);
+    m_killButton->setToolTip(tr("Force the server to stop immediately. Unsaved world data may be lost."));
+    m_commandEdit = new QLineEdit(this);
+    m_commandEdit->setPlaceholderText(tr("Type a server command and press Enter (no leading /)"));
+    row->addWidget(m_stateLabel);
+    row->addWidget(m_startButton);
+    row->addWidget(m_stopButton);
+    row->addWidget(m_killButton);
+    row->addWidget(m_commandEdit, 1);
+    ui->gridLayout->addLayout(row, ui->gridLayout->rowCount(), 0, 1, -1);
+
+    auto* server = m_instance->serverProcess();
+    connect(m_startButton, &QPushButton::clicked, this, &LogPage::startServer);
+    connect(m_stopButton, &QPushButton::clicked, this, [server] { server->stop(); });
+    connect(m_killButton, &QPushButton::clicked, this, [server] { server->kill(); });
+    connect(m_commandEdit, &QLineEdit::returnPressed, this, [this, server] {
+        const QString command = m_commandEdit->text().trimmed();
+        if (command.isEmpty()) {
+            return;
         }
-    } else {
-        m_proxy->setSourceModel(nullptr);
-        m_model.reset();
-    }
+        server->log("> " + command, MessageLevel::Launcher);
+        server->sendCommand(command);
+        m_commandEdit->clear();
+    });
+    connect(server, &Server::Process::stateChanged, this, [this] { updateControls(); });
+    updateControls();
 }
 
-void LogPage::onInstanceLaunchTaskChanged(LaunchTask* proc)
+void LogPage::updateControls()
 {
-    setInstanceLaunchTaskChanged(proc, false);
+    using State = Server::Process::State;
+    const auto state = m_instance->serverProcess()->state();
+    QString text;
+    switch (state) {
+        case State::Stopped:
+            text = m_instance->hasCrashed() ? tr("Crashed") : tr("Stopped");
+            break;
+        case State::Starting:
+            text = tr("Starting...");
+            break;
+        case State::Running:
+            text = tr("Running");
+            break;
+        case State::Stopping:
+            text = tr("Stopping...");
+            break;
+    }
+    m_stateLabel->setText(text);
+    m_startButton->setEnabled(state == State::Stopped);
+    m_stopButton->setEnabled(state == State::Starting || state == State::Running);
+    m_killButton->setEnabled(state != State::Stopped);
+    m_commandEdit->setEnabled(state == State::Starting || state == State::Running);
+}
+
+void LogPage::startServer()
+{
+    auto* server = m_instance->serverProcess();
+    QString error;
+    if (server->start(&error)) {
+        return;
+    }
+    if (error == "eula") {
+        const auto answer = QMessageBox::question(
+            this, tr("Minecraft EULA"),
+            tr("To run a Minecraft server you must accept the Minecraft End User License Agreement:\n"
+               "https://aka.ms/MinecraftEULA\n\nDo you accept it?"));
+        if (answer == QMessageBox::Yes && Server::Process::acceptEula(m_instance->gameRoot())) {
+            if (!server->start(&error)) {
+                QMessageBox::warning(this, tr("Could not start the server"), error);
+            }
+        }
+        return;
+    }
+    QMessageBox::warning(this, tr("Could not start the server"), error);
 }
 
 bool LogPage::apply()

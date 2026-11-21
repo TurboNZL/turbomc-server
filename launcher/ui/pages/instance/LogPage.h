@@ -38,14 +38,17 @@
 #include <QIdentityProxyModel>
 #include <QWidget>
 
-#include "BaseInstance.h"
-#include "launch/LaunchTask.h"
+#include "launch/LogModel.h"
+#include "minecraft/MinecraftInstance.h"
 #include "ui/pages/BasePage.h"
 
 namespace Ui {
 class LogPage;
 }
 class QTextCharFormat;
+class QPushButton;
+class QLabel;
+class QLineEdit;
 
 class LogFormatProxyModel : public QIdentityProxyModel {
    public:
@@ -63,9 +66,9 @@ class LogPage : public QWidget, public BasePage {
     Q_OBJECT
 
    public:
-    explicit LogPage(BaseInstance* instance, QWidget* parent = 0);
+    explicit LogPage(MinecraftInstance* instance, QWidget* parent = 0);
     virtual ~LogPage();
-    virtual QString displayName() const override { return tr("Minecraft Log"); }
+    virtual QString displayName() const override { return tr("Console"); }
     virtual QIcon icon() const override { return QIcon::fromTheme("log"); }
     virtual QString id() const override { return "console"; }
     virtual bool apply() override;
@@ -88,17 +91,21 @@ class LogPage : public QWidget, public BasePage {
     void findNextActivated();
     void findPreviousActivated();
 
-    void onInstanceLaunchTaskChanged(LaunchTask* proc);
-
    private:
     void modelStateToUI();
     void UIToModelState();
-    void setInstanceLaunchTaskChanged(LaunchTask* proc, bool initial);
+    void setupControls();
+    void updateControls();
+    void startServer();
 
    private:
     Ui::LogPage* ui;
-    BaseInstance* m_instance;
-    LaunchTask* m_process;
+    MinecraftInstance* m_instance;
+    QPushButton* m_startButton = nullptr;
+    QPushButton* m_stopButton = nullptr;
+    QPushButton* m_killButton = nullptr;
+    QLabel* m_stateLabel = nullptr;
+    QLineEdit* m_commandEdit = nullptr;
 
     LogFormatProxyModel* m_proxy;
     shared_qobject_ptr<LogModel> m_model;

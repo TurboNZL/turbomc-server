@@ -19,13 +19,15 @@ constexpr int STOP_GRACE_MS = 45 * 1000;
 
 Process::Process(MinecraftInstance* instance, QObject* parent) : QObject(parent), m_instance(instance)
 {
+    m_log.reset(new LogModel());
+    m_log->setMaxLines(5000);
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     connect(&m_process, &QProcess::readyRead, this, &Process::onReadyRead);
     connect(&m_process, &QProcess::finished, this, &Process::onFinished);
     connect(&m_process, &QProcess::errorOccurred, this, &Process::onError);
     m_killTimer.setSingleShot(true);
     connect(&m_killTimer, &QTimer::timeout, this, [this] {
-        emit line(tr("The server did not stop in time, killing it."), MessageLevel::Warning);
+        log(tr("The server did not stop in time, killing it."), MessageLevel::Warning);
         kill();
     });
 }
@@ -109,7 +111,7 @@ bool Process::start(QString* error)
     m_process.setArguments(javaArguments());
     m_process.setProcessEnvironment(m_instance->createEnvironment());
 
-    emit line(tr("> %1 %2").arg(javaPath(), javaArguments().join(' ')), MessageLevel::Launcher);
+    log(tr("> %1 %2").arg(javaPath(), javaArguments().join(' ')), MessageLevel::Launcher);
     setState(State::Starting);
     m_process.start();
     return true;
@@ -165,7 +167,7 @@ void Process::handleLine(QString text)
     if (m_state == State::Starting && text.contains(QRegularExpression("Done \\([0-9.,]+s\\)!"))) {
         setState(State::Running);
     }
-    emit line(text, level);
+    log(text, level);
 }
 
 void Process::onFinished(int exitCode, QProcess::ExitStatus status)
@@ -176,7 +178,7 @@ void Process::onFinished(int exitCode, QProcess::ExitStatus status)
         m_buffer.clear();
     }
     const bool crashed = !m_stopRequested && (exitCode != 0 || status == QProcess::CrashExit);
-    emit line(crashed ? tr("The server stopped unexpectedly (exit code %1).").arg(exitCode)
+    log(crashed ? tr("The server stopped unexpectedly (exit code %1).").arg(exitCode)
                       : tr("The server stopped (exit code %1).").arg(exitCode),
               crashed ? MessageLevel::Fatal : MessageLevel::Launcher);
     setState(State::Stopped);
@@ -186,10 +188,16 @@ void Process::onFinished(int exitCode, QProcess::ExitStatus status)
 void Process::onError(QProcess::ProcessError error)
 {
     if (error == QProcess::FailedToStart) {
-        emit line(tr("Could not start Java (%1). Check the Java path in the settings.").arg(javaPath()), MessageLevel::Fatal);
+        log(tr("Could not start Java (%1). Check the Java path in the settings.").arg(javaPath()), MessageLevel::Fatal);
         setState(State::Stopped);
         emit exited(-1, true);
     }
+}
+
+void Process::log(const QString& text, MessageLevel level)
+{
+    m_log->append(level, text);
+    emit line(text, level);
 }
 
 void Process::setState(State state)

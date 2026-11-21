@@ -39,6 +39,7 @@
 
 #include <QMessageBox>
 
+#include "logs/LogParser.h"
 #include "ui/GuiUtil.h"
 #include "ui/themes/ThemeManager.h"
 
