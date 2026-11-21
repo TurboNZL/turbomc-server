@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
+#include "server/ServerBackup.h"
 #include "server/ServerInstallTask.h"
 #include "ui/dialogs/ProgressDialog.h"
 
@@ -140,6 +141,22 @@ void ServerVersionPage::install()
             .arg(Server::softwareName(sw), version));
     if (answer != QMessageBox::Yes) {
         return;
+    }
+    if (Server::Backups::hasWorld(m_instance)) {
+        QString error;
+        auto backup = Server::Backups::create(m_instance, QString("before-%1-%2").arg(Server::softwareKey(sw), version), &error);
+        bool backedUp = false;
+        if (backup) {
+            ProgressDialog backupDialog(this);
+            backedUp = backupDialog.execWithTask(backup.get()) == QDialog::Accepted && backup->wasSuccessful();
+        }
+        if (!backedUp) {
+            const auto go = QMessageBox::question(this, tr("Backup failed"),
+                                                  tr("The world could not be backed up first. Install anyway?"));
+            if (go != QMessageBox::Yes) {
+                return;
+            }
+        }
     }
     auto task = makeShared<Server::InstallTask>(m_instance, sw, version);
     ProgressDialog dialog(this);

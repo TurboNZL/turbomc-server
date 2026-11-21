@@ -769,6 +769,10 @@ SET(LAUNCHER_SOURCES
     # GUI - instance pages
     ui/pages/instance/ExternalResourcesPage.cpp
     ui/pages/instance/ExternalResourcesPage.h
+    ui/pages/instance/ServerBackupsPage.cpp
+    ui/pages/instance/ServerBackupsPage.h
+    ui/pages/instance/ServerPropertiesPage.cpp
+    ui/pages/instance/ServerPropertiesPage.h
     ui/pages/instance/ServerVersionPage.cpp
     ui/pages/instance/ServerVersionPage.h
     ui/pages/instance/DataPackPage.h

@@ -8,6 +8,8 @@
 #include "ui/pages/instance/ModFolderPage.h"
 #include "ui/pages/instance/NotesPage.h"
 #include "ui/pages/instance/OtherLogsPage.h"
+#include "ui/pages/instance/ServerBackupsPage.h"
+#include "ui/pages/instance/ServerPropertiesPage.h"
 #include "ui/pages/instance/ServerVersionPage.h"
 #include "ui/pages/instance/WorldListPage.h"
 
@@ -29,6 +31,8 @@ class InstancePageProvider : protected QObject, public BasePageProvider {
         }
         values.append(new NotesPage(inst));
         values.append(new WorldListPage(inst, inst->worldList()));
+        values.append(new ServerPropertiesPage(inst));
+        values.append(new ServerBackupsPage(inst));
         values.append(new InstanceSettingsPage(inst));
         values.append(new OtherLogsPage("logs", tr("Other Logs"), "Other-Logs", inst));
         return values;

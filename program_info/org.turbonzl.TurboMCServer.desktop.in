@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=@Launcher_DisplayName@
+Comment=Run, update and manage your Minecraft servers
+Type=Application
+Terminal=false
+Exec=@Launcher_APP_BINARY_NAME@ %U
+StartupNotify=true
+Icon=@Launcher_AppID@
+Categories=Game;Utility;
+Keywords=minecraft;server;paper;fabric;purpur;
+StartupWMClass=@Launcher_CommonName@
+MimeType=x-scheme-handler/@Launcher_APP_BINARY_NAME@;
