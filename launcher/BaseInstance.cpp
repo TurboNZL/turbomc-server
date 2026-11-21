@@ -46,7 +46,6 @@
 
 #include "Application.h"
 #include "Json.h"
-#include "LaunchController.h"
 #include "launch/LaunchTask.h"
 #include "settings/Setting.h"
 
@@ -504,11 +503,6 @@ QStringList BaseInstance::extraArguments()
 LaunchTask* BaseInstance::getLaunchTask()
 {
     return m_launchProcess.get();
-}
-
-void BaseInstance::setLaunchController(std::unique_ptr<LaunchController> controller)
-{
-    m_launchController = std::move(controller);
 }
 
 void BaseInstance::updateRuntimeContext()

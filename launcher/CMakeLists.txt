@@ -139,16 +139,12 @@ set(NET_SOURCES
 set(LAUNCH_SOURCES
     launch/steps/CheckJava.cpp
     launch/steps/CheckJava.h
-    launch/steps/LookupServerAddress.cpp
-    launch/steps/LookupServerAddress.h
     launch/steps/LaunchCommand.cpp
     launch/steps/LaunchCommand.h
     launch/steps/TextPrint.cpp
     launch/steps/TextPrint.h
     launch/steps/QuitAfterGameStop.cpp
     launch/steps/QuitAfterGameStop.h
-    launch/steps/PrintServers.cpp
-    launch/steps/PrintServers.h
     launch/LaunchStep.cpp
     launch/LaunchStep.h
     launch/LaunchTask.cpp
@@ -208,32 +204,6 @@ set(MINECRAFT_SOURCES
     minecraft/update/LibrariesTask.cpp
     minecraft/update/LibrariesTask.h
 
-    minecraft/launch/ClaimAccount.cpp
-    minecraft/launch/ClaimAccount.h
-    minecraft/launch/CreateGameFolders.cpp
-    minecraft/launch/CreateGameFolders.h
-    minecraft/launch/EnsureAvailableMemory.cpp
-    minecraft/launch/EnsureAvailableMemory.h
-    minecraft/launch/EnsureOfflineLibraries.cpp
-    minecraft/launch/EnsureOfflineLibraries.h
-    minecraft/launch/ModMinecraftJar.cpp
-    minecraft/launch/ModMinecraftJar.h
-    minecraft/launch/ExtractNatives.cpp
-    minecraft/launch/ExtractNatives.h
-    minecraft/launch/LauncherPartLaunch.cpp
-    minecraft/launch/LauncherPartLaunch.h
-    minecraft/launch/MinecraftTarget.cpp
-    minecraft/launch/MinecraftTarget.h
-    minecraft/launch/PrintInstanceInfo.cpp
-    minecraft/launch/PrintInstanceInfo.h
-    minecraft/launch/ReconstructAssets.cpp
-    minecraft/launch/ReconstructAssets.h
-    minecraft/launch/ScanModFolders.cpp
-    minecraft/launch/ScanModFolders.h
-    minecraft/launch/VerifyJavaInstall.cpp
-    minecraft/launch/VerifyJavaInstall.h
-    minecraft/launch/AutoInstallJava.cpp
-    minecraft/launch/AutoInstallJava.h
 
     minecraft/GradleSpecifier.h
     minecraft/MinecraftInstance.cpp
@@ -757,8 +727,6 @@ SET(LAUNCHER_SOURCES
     ui/setupwizard/ThemeWizardPage.h
     ui/setupwizard/AutoJavaWizardPage.cpp
     ui/setupwizard/AutoJavaWizardPage.h
-    ui/setupwizard/LoginWizardPage.cpp
-    ui/setupwizard/LoginWizardPage.h
 
     # GUI - themes
     ui/themes/FusionTheme.cpp
@@ -786,8 +754,6 @@ SET(LAUNCHER_SOURCES
 
     # Processes
     LaunchMode.h
-    LaunchController.h
-    LaunchController.cpp
 
     # page provider for instances
     InstancePageProvider.h
@@ -938,8 +904,6 @@ SET(LAUNCHER_SOURCES
     ui/dialogs/NewComponentDialog.h
     ui/dialogs/NewInstanceDialog.cpp
     ui/dialogs/NewInstanceDialog.h
-    ui/dialogs/NewsDialog.cpp
-    ui/dialogs/NewsDialog.h
     ui/pagedialog/PageDialog.cpp
     ui/pagedialog/PageDialog.h
     ui/dialogs/ProgressDialog.cpp

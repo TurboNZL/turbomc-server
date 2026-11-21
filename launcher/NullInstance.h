@@ -52,22 +52,14 @@ class NullInstance : public BaseInstance {
     QString getStatusbarDescription() override { return tr("Unknown instance type"); };
     QSet<QString> traits() const override { return {}; };
     QString instanceConfigFolder() const override { return instanceRoot(); };
-    LaunchTask* createLaunchTask(AuthSessionPtr, MinecraftTarget::Ptr) override { return nullptr; }
     QList<Task::Ptr> createUpdateTask() override { return {}; }
     QProcessEnvironment createEnvironment() override { return QProcessEnvironment(); }
-    QProcessEnvironment createLaunchEnvironment() override { return QProcessEnvironment(); }
     QMap<QString, QString> getVariables() override { return QMap<QString, QString>(); }
     QStringList getLogFileSearchPaths() override { return {}; }
     bool canExport() const override { return false; }
     bool canEdit() const override { return false; }
     bool canLaunch() const override { return false; }
     void populateLaunchMenu(QMenu* menu) override {}
-    QStringList verboseDescription(AuthSessionPtr session, MinecraftTarget::Ptr targetToJoin) override
-    {
-        QStringList out;
-        out << "Null instance - placeholder.";
-        return out;
-    }
     QString modsRoot() const override { return QString(); }
     void updateRuntimeContext() override
     {

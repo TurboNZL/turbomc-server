@@ -49,9 +49,6 @@
 
 #include "QObjectPtr.h"
 
-#include "minecraft/auth/MinecraftAccount.h"
-
-class LaunchController;
 class LocalPeer;
 class InstanceWindow;
 class MainWindow;
@@ -61,12 +58,10 @@ class QFile;
 class HttpMetaCache;
 class SettingsObject;
 class InstanceList;
-class AccountList;
 class IconList;
 class QNetworkAccessManager;
 class JavaInstallList;
 class ExternalUpdater;
-class BaseProfilerFactory;
 class BaseDetachedToolFactory;
 class TranslationsModel;
 class ITheme;
@@ -77,8 +72,6 @@ class MinecraftInstance;
 
 class LogModel;
 
-struct MinecraftTarget;
-class MinecraftAccount;
 
 namespace Meta {
 class Index;
@@ -103,7 +96,6 @@ class Application : public QApplication {
     enum Capability : std::uint8_t {
         None = 0U,
 
-        SupportsMSA = 1U << 0U,
         SupportsFlame = 1U << 1U,
         SupportsGameMode = 1U << 2U,
         SupportsMangoHud = 1U << 3U,
@@ -135,11 +127,7 @@ class Application : public QApplication {
 
     IconList* icons() const { return m_icons.get(); }
 
-    AccountList* accounts() const { return m_accounts.get(); }
-
     Status status() const { return m_status; }
-
-    const QMap<QString, std::shared_ptr<BaseProfilerFactory>>& profilers() const { return m_profilers; }
 
     void updateProxySettings(const QString& proxyTypeStr, const QString& addr, int port, const QString& user, const QString& password);
 
@@ -159,7 +147,6 @@ class Application : public QApplication {
      */
     QString getJarPath(const QString& jarFile);
 
-    QString getMSAClientID();
     QString getFlameAPIKey();
     QString getModrinthAPIToken();
     QString getUserAgent();
@@ -203,25 +190,18 @@ class Application : public QApplication {
     void globalSettingsApplied();
     int currentCatChanged(int index);
 
-    void oauthReplyRecieved(QVariantMap);
-
 #ifdef Q_OS_MACOS
     void clickedOnDock();
 #endif
 
    public slots:
-    bool launch(MinecraftInstance* instance,
-                LaunchMode mode = LaunchMode::Normal,
-                std::shared_ptr<MinecraftTarget> targetToJoin = nullptr,
-                shared_qobject_ptr<MinecraftAccount> accountToUse = nullptr,
-                const QString& offlineName = QString());
+    bool launch(BaseInstance* instance);
     bool kill(BaseInstance* instance);
     static void closeCurrentWindow();
 
    private slots:
     void on_windowClose();
     void messageReceived(const QByteArray& message);
-    void controllerFinished();
 
    private:
     static bool handleDataMigration(const QString& currentData, const QString& oldData, const QString& name, const QString& configFile);
@@ -244,7 +224,6 @@ class Application : public QApplication {
     std::unique_ptr<QNetworkAccessManager> m_network;
 
     std::unique_ptr<ExternalUpdater> m_updater;
-    std::unique_ptr<AccountList> m_accounts;
 
     std::unique_ptr<HttpMetaCache> m_metacache;
     std::unique_ptr<Meta::Index> m_metadataIndex;
@@ -257,8 +236,6 @@ class Application : public QApplication {
     std::unique_ptr<TranslationsModel> m_translations;
     std::unique_ptr<GenericPageProvider> m_globalSettingsProvider;
     std::unique_ptr<ThemeManager> m_themeManager;
-
-    QMap<QString, std::shared_ptr<BaseProfilerFactory>> m_profilers;
 
     QString m_rootPath;
     QString m_dataPath;
@@ -289,11 +266,6 @@ class Application : public QApplication {
     QString m_detectedOpenALPath;
     QString m_detectedSDLPath;
     QString m_instanceIdToLaunch;
-    QString m_serverToJoin;
-    QString m_worldToJoin;
-    QString m_profileToUse;
-    bool m_launchOffline = false;
-    QString m_offlineName;
     bool m_liveCheck = false;
     QList<QUrl> m_urlsToImport;
     QString m_instanceIdToShowWindowOf;

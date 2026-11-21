@@ -304,5 +304,5 @@ void LaunchTask::emitFailed(QString reason)
 
 QStringList LaunchTask::substituteVariables(QString& cmd, bool isLaunch) const
 {
-    return Commandline::process(cmd, isLaunch ? m_instance->createLaunchEnvironment() : m_instance->createEnvironment());
+    return Commandline::process(cmd, m_instance->createEnvironment());
 }

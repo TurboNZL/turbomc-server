@@ -47,7 +47,6 @@
 #include "java/JavaInstallList.h"
 #include "net/PasteUpload.h"
 #include "tasks/Task.h"
-#include "tools/GenericProfiler.h"
 #include "ui/InstanceWindow.h"
 #include "ui/MainWindow.h"
 #include "ui/ToolTipFilter.h"
@@ -58,7 +57,6 @@
 
 #include "ui/pages/BasePageProvider.h"
 #include "ui/pages/global/APIPage.h"
-#include "ui/pages/global/AccountListPage.h"
 #include "ui/pages/global/AppearancePage.h"
 #include "ui/pages/global/ExternalToolsPage.h"
 #include "ui/pages/global/JavaPage.h"
@@ -110,14 +108,11 @@
 #include "InstanceList.h"
 #include "MTPixmapCache.h"
 
-#include <minecraft/auth/AccountList.h>
 #include "icons/IconList.h"
 #include "net/HttpMetaCache.h"
 
 #include "updater/ExternalUpdater.h"
 
-#include "tools/JProfiler.h"
-#include "tools/JVisualVM.h"
 
 #include "settings/INISettingsObject.h"
 #include "settings/Setting.h"
@@ -322,10 +317,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
     parser.addOptions(
         { { { "d", "dir" }, "Use a custom path as application root (use '.' for current directory)", "directory" },
           { { "l", "launch" }, "Launch the specified instance (by instance ID)", "instance" },
-          { { "s", "server" }, "Join the specified server on launch (only valid in combination with --launch)", "address" },
-          { { "w", "world" }, "Join the specified world on launch (only valid in combination with --launch)", "world" },
-          { { "a", "profile" }, "Use the account specified by its profile name (only valid in combination with --launch)", "profile" },
-          { { "o", "offline" }, "Launch offline, with given player name (only valid in combination with --launch)", "offline" },
           { "alive", "Write a small '" + g_liveCheckFile + "' file after the launcher starts" },
           { "show-window", "Show the main launcher window (useful in combination with --launch)" },
           { { "I", "import" }, "Import instance or resource from specified local path or URL", "url" },
@@ -339,13 +330,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
     parser.process(arguments());
 
     m_instanceIdToLaunch = parser.value("launch");
-    m_serverToJoin = parser.value("server");
-    m_worldToJoin = parser.value("world");
-    m_profileToUse = parser.value("profile");
-    if (parser.isSet("offline")) {
-        m_launchOffline = true;
-        m_offlineName = parser.value("offline");
-    }
     m_liveCheck = parser.isSet("alive");
 
     m_instanceIdToShowWindowOf = parser.value("show");
@@ -358,14 +342,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
     // treat unspecified positional arguments as import urls
     for (const auto& url : parser.positionalArguments()) {
         m_urlsToImport.append(normalizeImportUrl(url));
-    }
-
-    // error if --launch is missing with --server or --profile
-    if ((!m_serverToJoin.isEmpty() || !m_worldToJoin.isEmpty() || !m_profileToUse.isEmpty() || m_launchOffline) &&
-        m_instanceIdToLaunch.isEmpty()) {
-        std::cerr << "--server, --profile and --offline can only be used in combination with --launch!" << std::endl;
-        m_status = Application::Failed;
-        return;
     }
 
     QString origcwdPath = QDir::currentPath();
@@ -481,18 +457,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
                 launch.command = "launch";
                 launch.args["id"] = m_instanceIdToLaunch;
 
-                if (!m_serverToJoin.isEmpty()) {
-                    launch.args["server"] = m_serverToJoin;
-                } else if (!m_worldToJoin.isEmpty()) {
-                    launch.args["world"] = m_worldToJoin;
-                }
-                if (!m_profileToUse.isEmpty()) {
-                    launch.args["profile"] = m_profileToUse;
-                }
-                if (m_launchOffline) {
-                    launch.args["offline_enabled"] = "true";
-                    launch.args["offline_name"] = m_offlineName;
-                }
                 sentMessage = m_peerInstance->sendMessage(launch.serialize(), timeout);
             }
             if (sentMessage) {
@@ -620,11 +584,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         qInfo() << "Application root path      :" << m_rootPath;
         if (!m_instanceIdToLaunch.isEmpty()) {
             qInfo() << "ID of instance to launch   :" << m_instanceIdToLaunch;
-        }
-        if (!m_serverToJoin.isEmpty()) {
-            qInfo() << "Address of server to join  :" << m_serverToJoin;
-        } else if (!m_worldToJoin.isEmpty()) {
-            qInfo() << "Name of the world to join  :" << m_worldToJoin;
         }
         qInfo() << "<> Paths set.";
     }
@@ -840,7 +799,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
         m_settings->registerSetting("UpdateDialogGeometry", "");
 
-        m_settings->registerSetting("NewsGeometry", "");
 
         m_settings->registerSetting("ModDownloadGeometry", "");
         m_settings->registerSetting("RPDownloadGeometry", "");
@@ -902,7 +860,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("WorldTools", "{}");
 
         // Custom Microsoft Authentication Client ID
-        m_settings->registerSetting("MSAClientIDOverride", "");
 
         // Custom Flame API Key
         m_settings->registerSetting({ "FlameKeyOverride", "CFKeyOverride" }, "");
@@ -925,7 +882,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             m_globalSettingsProvider->addPage<AppearancePage>();
             m_globalSettingsProvider->addPage<MinecraftPage>();
             m_globalSettingsProvider->addPage<JavaPage>();
-            m_globalSettingsProvider->addPage<AccountListPage>();
             m_globalSettingsProvider->addPage<APIPage>();
             m_globalSettingsProvider->addPage<ExternalToolsPage>();
             m_globalSettingsProvider->addPage<ProxyPage>();
@@ -1018,16 +974,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         qInfo() << "<> Instances loaded.";
     }
 
-    // and accounts
-    {
-        m_accounts.reset(new AccountList(this));
-        qInfo() << "Loading accounts...";
-        m_accounts->setListFilePath("accounts.json", true);
-        m_accounts->loadList();
-        m_accounts->fillQueue();
-        qInfo() << "<> Accounts loaded.";
-    }
-
     // init the http meta cache
     {
         m_metacache.reset(new HttpMetaCache("metacache"));
@@ -1056,14 +1002,6 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_translations->downloadIndex();
         qInfo() << "Your language is" << m_translations->selectedLanguage();
         qInfo() << "<> Translations loaded.";
-    }
-
-    // FIXME: what to do with these?
-    m_profilers.insert("jprofiler", std::shared_ptr<BaseProfilerFactory>(new JProfilerFactory()));
-    m_profilers.insert("jvisualvm", std::shared_ptr<BaseProfilerFactory>(new JVisualVMFactory()));
-    m_profilers.insert("generic", std::shared_ptr<BaseProfilerFactory>(new GenericProfilerFactory()));
-    for (const auto& profiler : m_profilers.values()) {
-        profiler->registerSettings(m_settings.get());
     }
 
 #ifdef Q_OS_MACOS
@@ -1269,9 +1207,8 @@ bool Application::createSetupWizard()
     bool pasteInterventionRequired = settings()->get("PastebinURL") != "";
     bool validWidgets = m_themeManager->isValidApplicationTheme(settings()->get("ApplicationTheme").toString());
     bool validIcons = m_themeManager->isValidIconTheme(settings()->get("IconTheme").toString());
-    bool login = !m_accounts->anyAccountIsValid() && (capabilities().testAnyFlags(Application::SupportsMSA));
     bool themeInterventionRequired = !validWidgets || !validIcons;
-    bool wizardRequired = javaRequired || languageRequired || pasteInterventionRequired || themeInterventionRequired || askjava || login;
+    bool wizardRequired = javaRequired || languageRequired || pasteInterventionRequired || themeInterventionRequired || askjava;
     if (wizardRequired) {
         const bool darkMode = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
         // set default theme after going into theme wizard
@@ -1378,28 +1315,8 @@ void Application::performMainStartupAction()
     if (!m_instanceIdToLaunch.isEmpty()) {
         auto* inst = instances()->getInstanceById(m_instanceIdToLaunch);
         if (inst) {
-            MinecraftTarget::Ptr targetToJoin = nullptr;
-            MinecraftAccountPtr accountToUse = nullptr;
-
             qDebug() << "<> Instance" << m_instanceIdToLaunch << "launching";
-            if (!m_serverToJoin.isEmpty()) {
-                // FIXME: validate the server string
-                targetToJoin.reset(new MinecraftTarget(MinecraftTarget::parse(m_serverToJoin, false)));
-                qDebug() << "   Launching with server" << m_serverToJoin;
-            } else if (!m_worldToJoin.isEmpty()) {
-                targetToJoin.reset(new MinecraftTarget(MinecraftTarget::parse(m_worldToJoin, true)));
-                qDebug() << "   Launching with world" << m_worldToJoin;
-            }
-
-            if (!m_profileToUse.isEmpty()) {
-                accountToUse = accounts()->getAccountByProfileName(m_profileToUse);
-                if (!accountToUse) {
-                    return;
-                }
-                qDebug() << "   Launching with account" << m_profileToUse;
-            }
-
-            launch(inst, m_launchOffline ? LaunchMode::Offline : LaunchMode::Normal, targetToJoin, accountToUse, m_offlineName);
+            launch(inst);
 
             if (!m_showMainWindow) {
                 return;
@@ -1495,13 +1412,7 @@ void Application::messageReceived(const QByteArray& message)
         m_mainWindow->processURLs({ normalizeImportUrl(url) });
     } else if (command == "launch") {
         QString id = received.args["id"];
-        QString server = received.args["server"];
-        QString world = received.args["world"];
-        QString profile = received.args["profile"];
-        bool offline = received.args["offline_enabled"] == "true";
-        QString offlineName = received.args["offline_name"];
-
-        MinecraftInstance* instance = nullptr;
+        BaseInstance* instance = nullptr;
         if (!id.isEmpty()) {
             instance = instances()->getInstanceById(id);
             if (!instance) {
@@ -1513,23 +1424,7 @@ void Application::messageReceived(const QByteArray& message)
             return;
         }
 
-        MinecraftTarget::Ptr serverObject = nullptr;
-        if (!server.isEmpty()) {
-            serverObject = std::make_shared<MinecraftTarget>(MinecraftTarget::parse(server, false));
-        } else if (!world.isEmpty()) {
-            serverObject = std::make_shared<MinecraftTarget>(MinecraftTarget::parse(world, true));
-        }
-        MinecraftAccountPtr accountObject;
-        if (!profile.isEmpty()) {
-            accountObject = accounts()->getAccountByProfileName(profile);
-            if (!accountObject) {
-                qWarning() << "Launch command requires the specified profile to be valid. " << profile
-                           << "does not resolve to any account.";
-                return;
-            }
-        }
-
-        launch(instance, offline ? LaunchMode::Offline : LaunchMode::Normal, serverObject, accountObject, offlineName);
+        launch(instance);
     } else {
         qWarning() << "Received invalid message" << message;
     }
@@ -1563,44 +1458,11 @@ bool Application::openJsonEditor(const QString& filename)
     return DesktopServices::run(m_settings->get("JsonEditor").toString(), { file });
 }
 
-bool Application::launch(MinecraftInstance* instance,
-                         LaunchMode mode,
-                         MinecraftTarget::Ptr targetToJoin,
-                         MinecraftAccountPtr accountToUse,
-                         const QString& offlineName)
+bool Application::launch(BaseInstance* instance)
 {
-    if (m_updateRunning) {
-        qDebug() << "Cannot launch instances while an update is running. Please try again when updates are completed.";
-    } else if (instance->canLaunch()) {
-        if (instance->window() != nullptr) {
-            if (!instance->window()->saveAll()) {
-                return false;
-            }
-        }
-        instance->setLaunchController(std::make_unique<LaunchController>());
-        auto* controller = instance->launchController();
-        controller->setInstance(instance);
-        controller->setLaunchMode(mode);
-        controller->setProfiler(profilers().value(instance->settings()->get("Profiler").toString(), nullptr).get());
-        controller->setTargetToJoin(std::move(targetToJoin));
-        controller->setAccountToUse(std::move(accountToUse));
-        controller->setOfflineName(offlineName);
-        if (instance->window() != nullptr) {
-            controller->setParentWidget(instance->window());
-        } else if (m_mainWindow != nullptr) {
-            controller->setParentWidget(m_mainWindow);
-        }
-        connect(controller, &LaunchController::finished, this, &Application::controllerFinished);
-        addRunningInstance();
-        QMetaObject::invokeMethod(controller, &Task::start, Qt::QueuedConnection);
-        return true;
-    } else if (instance->isRunning()) {
-        showInstanceWindow(instance, "console");
-        return true;
-    } else if (instance->canEdit()) {
-        showInstanceWindow(instance);
-        return true;
-    }
+    // TODO(server-manager): start the server process for this instance.
+    Q_UNUSED(instance);
+    qWarning() << "Starting servers is not implemented yet.";
     return false;
 }
 
@@ -1610,10 +1472,7 @@ bool Application::kill(BaseInstance* instance)
         qWarning() << "Attempted to kill instance" << instance->id() << ", which isn't running.";
         return false;
     }
-    if (instance->launchController() != nullptr) {
-        return instance->launchController()->abort();
-    }
-    return true;
+    return false;
 }
 
 void Application::closeCurrentWindow()
@@ -1656,32 +1515,6 @@ bool Application::updatesAreAllowed() const
 void Application::updateIsRunning(bool running)
 {
     m_updateRunning = running;
-}
-
-void Application::controllerFinished()
-{
-    auto* controller = qobject_cast<LaunchController*>(sender());
-    if (!controller) {
-        return;
-    }
-
-    auto* instance = controller->instance();
-
-    const bool wasSuccessful = controller->wasSuccessful();
-    // on success, do...
-    if (wasSuccessful && instance->settings()->get("AutoCloseConsole").toBool()) {
-        if (instance->window() != nullptr) {
-            QMetaObject::invokeMethod(instance->window(), &QWidget::close, Qt::QueuedConnection);
-        }
-    }
-    instance->setLaunchController(nullptr);
-    subRunningInstance();
-
-    // quit when there are no more windows.
-    if (shouldExitNow()) {
-        m_status = wasSuccessful ? Succeeded : Failed;
-        exit(wasSuccessful ? 0 : 1);
-    }
 }
 
 void Application::ShowGlobalSettings(class QWidget* parent, QString openPage)
@@ -1869,9 +1702,6 @@ Meta::Index* Application::metadataIndex()
 void Application::updateCapabilities()
 {
     m_capabilities = None;
-    if (!getMSAClientID().isEmpty()) {
-        m_capabilities |= SupportsMSA;
-    }
     if (!getFlameAPIKey().isEmpty()) {
         m_capabilities |= SupportsFlame;
     }
@@ -1919,16 +1749,6 @@ QString Application::getJarPath(const QString& jarFile)
         }
     }
     return {};
-}
-
-QString Application::getMSAClientID()
-{
-    QString clientIDOverride = m_settings->get("MSAClientIDOverride").toString();
-    if (!clientIDOverride.isEmpty()) {
-        return clientIDOverride;
-    }
-
-    return BuildConfig.MSA_CLIENT_ID;
 }
 
 QString Application::getFlameAPIKey()

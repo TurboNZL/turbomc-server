@@ -49,15 +49,12 @@
 
 #include "QObjectPtr.h"
 #include "RuntimeContext.h"
-#include "minecraft/auth/MinecraftAccount.h"
-#include "minecraft/launch/MinecraftTarget.h"
 #include "settings/SettingsObject.h"
 #include "tasks/Task.h"
 
 class BaseInstance;
 class InstanceWindow;
 class LaunchTask;
-class LaunchController;
 class QDir;
 
 /// Shortcut saving target representations
@@ -198,15 +195,8 @@ class BaseInstance : public QObject {
     /// returns a valid update task
     virtual QList<Task::Ptr> createUpdateTask() = 0;
 
-    /// returns a valid launcher (task container)
-    virtual LaunchTask* createLaunchTask(AuthSessionPtr account, MinecraftTarget::Ptr targetToJoin) = 0;
-
     /// returns the current launch task (if any)
     LaunchTask* getLaunchTask();
-
-    LaunchController* launchController() { return m_launchController.get(); }
-
-    void setLaunchController(std::unique_ptr<LaunchController> controller);
 
     InstanceWindow* window() { return m_window; }
 
@@ -216,7 +206,6 @@ class BaseInstance : public QObject {
      * Create envrironment variables for running the instance
      */
     virtual QProcessEnvironment createEnvironment() = 0;
-    virtual QProcessEnvironment createLaunchEnvironment() = 0;
 
     /*!
      * Returns the root folder to use for looking up log files
@@ -259,11 +248,6 @@ class BaseInstance : public QObject {
     virtual void populateLaunchMenu(QMenu* menu) = 0;
 
     bool reloadSettings();
-
-    /**
-     * 'print' a verbose description of the instance into a QStringList
-     */
-    virtual QStringList verboseDescription(AuthSessionPtr session, MinecraftTarget::Ptr targetToJoin) = 0;
 
     Status currentStatus() const;
 
@@ -318,7 +302,6 @@ class BaseInstance : public QObject {
     SettingsObject* m_globalSettings;
     bool m_specificSettingsLoaded = false;
 
-    std::unique_ptr<LaunchController> m_launchController;
     InstanceWindow* m_window = nullptr;
 };
 

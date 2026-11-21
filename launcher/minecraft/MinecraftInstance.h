@@ -41,7 +41,6 @@
 #include <QProcess>
 
 #include "BaseInstance.h"
-#include "minecraft/launch/MinecraftTarget.h"
 
 class DataPackFolderModel;
 class LaunchStep;
@@ -121,14 +120,9 @@ class MinecraftInstance : public BaseInstance {
     WorldList* worldList();
 
     //////  Launch stuff //////
-    QList<Task::Ptr> createUpdateTask() override;
-    LaunchTask* createLaunchTask(AuthSessionPtr account, MinecraftTarget::Ptr targetToJoin) override;
+    QList<Task::Ptr> createUpdateTask() override { return {}; }
     QStringList extraArguments() override;
-    QStringList verboseDescription(AuthSessionPtr session, MinecraftTarget::Ptr targetToJoin) override;
     QList<Mod*> getJarMods() const;
-    QString createLaunchScript(AuthSessionPtr session, MinecraftTarget::Ptr targetToJoin);
-    /// get arguments passed to java
-    QStringList javaArguments();
     QString getLauncher();
     bool shouldApplyOnlineFixes();
 
@@ -137,26 +131,17 @@ class MinecraftInstance : public BaseInstance {
 
     /// create an environment for launching processes
     QProcessEnvironment createEnvironment() override;
-    QProcessEnvironment createLaunchEnvironment() override;
 
     QStringList getLogFileSearchPaths() override;
 
     QString getStatusbarDescription() override;
 
     // FIXME: remove
-    virtual QStringList getClassPath();
-    // FIXME: remove
-    virtual QStringList getNativeJars();
-    // FIXME: remove
     virtual QString getMainClass() const;
-
-    // FIXME: remove
-    virtual QStringList processMinecraftArgs(AuthSessionPtr account, MinecraftTarget::Ptr targetToJoin) const;
 
     virtual JavaVersion getJavaVersion();
 
    protected:
-    QMap<QString, QString> createCensorFilterFromSession(AuthSessionPtr session);
     QMap<QString, QString> makeProfileVarMapping(std::shared_ptr<LaunchProfile> profile) const;
 
    protected:  // data
