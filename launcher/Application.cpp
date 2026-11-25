@@ -41,6 +41,7 @@
  */
 
 #include "Application.h"
+#include "server/ApiServer.h"
 #include "BuildConfig.h"
 
 #include "DataMigrationTask.h"
@@ -318,7 +319,8 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
           { "alive", "Write a small '" + g_liveCheckFile + "' file after the launcher starts" },
           { "show-window", "Show the main launcher window (useful in combination with --launch)" },
           { { "I", "import" }, "Import instance or resource from specified local path or URL", "url" },
-          { "show", "Opens the window for the specified instance (by instance ID)", "show" } });
+          { "show", "Opens the window for the specified instance (by instance ID)", "show" },
+          { "serve", "Run with no window and listen for a UI on a local socket (see server/ApiServer.h)" } });
     // Has to be positional for some OS to handle that properly
     parser.addPositionalArgument("URL", "Import the resource(s) at the given URL(s) (same as -I / --import)", "[URL...]");
 
@@ -332,6 +334,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
     m_instanceIdToShowWindowOf = parser.value("show");
     m_showMainWindow = parser.isSet("show-window");
+    m_serveApi = parser.isSet("serve");
 
     for (const auto& url : parser.values("import")) {
         m_urlsToImport.append(normalizeImportUrl(url));
@@ -1176,6 +1179,13 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
 bool Application::createSetupWizard()
 {
+    if (m_serveApi) {
+        // no windows when serving a UI: use sensible defaults instead of asking
+        if (settings()->get("Language").toString().isEmpty()) {
+            settings()->set("Language", "en_US");
+        }
+        return false;
+    }
     bool javaRequired = [this]() {
         if (BuildConfig.JAVA_DOWNLOADER_ENABLED && settings()->get("AutomaticJavaDownload").toBool()) {
             return false;
@@ -1302,6 +1312,17 @@ bool Application::event(QEvent* event)
 void Application::performMainStartupAction()
 {
     m_status = Application::Initialized;
+    if (m_serveApi) {
+        auto* api = new Server::ApiServer(this);
+        QString error;
+        if (!api->listen(&error)) {
+            qCritical() << "Could not listen on" << Server::ApiServer::socketPath() << ":" << error;
+            quit();
+            return;
+        }
+        qInfo() << "TurboMC API listening on" << Server::ApiServer::socketPath();
+        return;
+    }
     if (!m_instanceIdToLaunch.isEmpty()) {
         auto* inst = instances()->getInstanceById(m_instanceIdToLaunch);
         if (inst) {

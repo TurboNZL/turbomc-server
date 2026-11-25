@@ -48,6 +48,13 @@ int main(int argc, char* argv[])
     console::WindowsConsoleGuard _consoleGuard;
 #endif
 
+    // `--serve` runs with no window: use Qt's offscreen platform so no display is needed
+    for (int i = 1; i < argc; ++i) {
+        if (QByteArray(argv[i]) == "--serve" && qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) {
+            qputenv("QT_QPA_PLATFORM", "offscreen");
+        }
+    }
+
     // initialize Qt
     Application app(argc, argv);
     switch (app.status()) {

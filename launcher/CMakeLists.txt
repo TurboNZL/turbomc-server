@@ -206,7 +206,11 @@ set(MINECRAFT_SOURCES
 
 
     minecraft/GradleSpecifier.h
+    server/ApiServer.cpp
+    server/ApiServer.h
     server/ServerBackup.cpp
+    server/ServerJava.cpp
+    server/ServerJava.h
     server/ServerBackup.h
     server/ServerCreationTask.cpp
     server/ServerCreationTask.h

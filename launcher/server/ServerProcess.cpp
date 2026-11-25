@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "ServerProcess.h"
+#include "ServerJava.h"
 
 #include <QDir>
 #include <QFile>
@@ -65,6 +66,17 @@ bool Process::acceptEula(const QString& serverRoot)
 
 QString Process::javaPath() const
 {
+    // an explicit per-server override wins; otherwise pick the runtime this Minecraft version needs
+    if (m_instance->settings()->get("OverrideJavaLocation").toBool()) {
+        const QString configured = m_instance->settings()->get("JavaPath").toString();
+        if (!configured.isEmpty()) {
+            return configured;
+        }
+    }
+    const QString chosen = Java::choose(m_instance->settings()->get("ServerJavaMajor").toInt());
+    if (!chosen.isEmpty()) {
+        return chosen;
+    }
     const QString configured = m_instance->settings()->get("JavaPath").toString();
     return configured.isEmpty() ? QStringLiteral("java") : configured;
 }
@@ -102,6 +114,14 @@ bool Process::start(QString* error)
     }
     if (!eulaAccepted(root)) {
         return fail("eula");
+    }
+
+    const int needed = m_instance->settings()->get("ServerJavaMajor").toInt();
+    if (needed > 0 && !m_instance->settings()->get("OverrideJavaLocation").toBool() && Java::choose(needed).isEmpty()) {
+        // the UI shows this text; the "java:" prefix tells it which version to suggest
+        return fail(QString("java:%1:%2").arg(needed).arg(tr("This Minecraft version needs Java %1 or newer, and no such Java was found. Install a Java %1 "
+                                                             "runtime (for example openjdk-%1-jre-headless) or choose a Java in the settings.")
+                                                              .arg(needed)));
     }
 
     m_stopRequested = false;
