@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "ApiServer.h"
 
+#include <unistd.h>
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -73,11 +75,16 @@ ApiServer::ApiServer(QObject* parent) : QObject(parent)
 
 QString ApiServer::socketPath()
 {
-    QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
-    if (dir.isEmpty()) {
-        dir = QDir::tempPath();
+    // Same rule as the UI: $TURBOMC_SOCKET, else $XDG_RUNTIME_DIR/turbomc-server.sock, else /tmp/turbomc-server-<uid>.sock
+    const QByteArray forced = qgetenv("TURBOMC_SOCKET");
+    if (!forced.isEmpty()) {
+        return QString::fromLocal8Bit(forced);
     }
-    return QDir(dir).filePath("turbomc-server.sock");
+    const QByteArray runtime = qgetenv("XDG_RUNTIME_DIR");
+    if (!runtime.isEmpty()) {
+        return QDir(QString::fromLocal8Bit(runtime)).filePath("turbomc-server.sock");
+    }
+    return QDir::temp().filePath(QString("turbomc-server-%1.sock").arg(::getuid()));
 }
 
 bool ApiServer::listen(QString* error)

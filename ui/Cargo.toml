@@ -1,0 +1,20 @@
+[package]
+name = "turbomc-ui"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "TurboMC Server: the window. Talks to the turbomc-server core over a local socket."
+
+[dependencies]
+turboui-core = { git = "https://github.com/TurboNZL/turboui" }
+turboui-gpui = { git = "https://github.com/TurboNZL/turboui" }
+serde_json = "1"
+turboui-raster = { git = "https://github.com/TurboNZL/turboui", optional = true }
+
+[features]
+default = []
+# `turbomc-ui --shot out.png tick wait:500 click:srv:0 ...` draws the window offscreen (for checking it without a screen)
+headless = ["turboui-gpui/headless", "dep:turboui-raster"]
+
+[profile.dev.package."*"]
+opt-level = 2
