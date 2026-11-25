@@ -244,6 +244,51 @@ fn backups_page(app: &App) -> Node {
         .child(label(if stopped { "Backups are zip files of the world folders." } else { "Stop the server to restore a backup." }).size(t.num("text_sm")).color(t.role("muted")))
 }
 
+fn version_page(app: &App) -> Node {
+    let t = &app.theme;
+    let f = &app.vform;
+    let Some(server) = app.open_server() else { return col() };
+    let busy = app.task.is_some();
+    let sw_buttons = row().gap(6.0).children(app.software.iter().enumerate().map(|(i, (_, name))| {
+        let kind = if i == f.software { ButtonKind::Primary } else { ButtonKind::Normal };
+        button(t, &format!("vsw:{i}"), name, kind, hov(app, &format!("vsw:{i}")), !busy)
+    }));
+    let list_body: Node = if f.loading {
+        col().pad(12.0).child(label("Loading versions...").size(t.num("text_md")).color(t.role("muted")))
+    } else {
+        col().gap(1.0).children(f.versions.iter().map(|(v, stable)| {
+            let id = format!("vver:{v}");
+            let is_current = *v == server.version && app.software.get(f.software).map_or(false, |(k, _)| *k == server.software);
+            let mut r = row().id(id.clone()).gap(8.0).pad_xy(10.0, 5.0).align(Align::Center).radius(6.0).child(label(v.clone()).size(t.num("text_md")).color(t.role("text")));
+            if is_current {
+                r = r.child(label("installed").size(t.num("text_sm")).color(t.role("ok")));
+            }
+            if !stable {
+                r = r.child(label("snapshot").size(t.num("text_sm")).color(t.role("warn")));
+            }
+            if f.version.as_deref() == Some(v.as_str()) {
+                r = r.bg(t.role("selection"));
+            } else if hov(app, &id) {
+                r = r.bg(t.role("hover"));
+            }
+            r
+        }))
+    };
+    let list = col().grow(1.0).pad(4.0).bg(t.role("console_bg")).border(1.0, t.role("border")).radius(t.num("radius_card").min(12.0)).clip()
+        .child(col().child(list_body).scroll_area("vversions", app.scroll.get("vversions").copied().unwrap_or(0.0)));
+    let status: Node = match &app.task {
+        Some(task) => col().gap(4.0).child(progress(t, task.progress, 420.0)).child(label(if task.status.is_empty() { "Working...".to_string() } else { task.status.clone() }).size(t.num("text_sm")).color(t.role("muted"))),
+        None => col().child(label(if server.running() { "Stop the server before changing its version." } else { "Your world and settings are kept; the world is backed up first." }).size(t.num("text_sm")).color(t.role("muted"))),
+    };
+    col().grow(1.0).gap(8.0)
+        .child(label(format!("Installed: {} {}", server.software_name, server.version)).size(t.num("text_md")).color(t.role("text")))
+        .child(sw_buttons)
+        .child(row().align(Align::Center).child(label("Minecraft version").size(t.num("text_sm")).color(t.role("muted"))).child(spacer()).child(checkbox(t, "vunstable", f.unstable, "Show snapshots")))
+        .child(list)
+        .child(status)
+        .child(row().gap(8.0).child(spacer()).child(button(t, "vinstall", "Install this version", ButtonKind::Primary, hov(app, "vinstall"), !busy && !server.running() && f.version.is_some())))
+}
+
 fn soon_page(app: &App, page: Page) -> Node {
     let t = &app.theme;
     col().grow(1.0).align(Align::Center).justify(turboui_core::Justify::Center).gap(8.0)
@@ -269,6 +314,7 @@ fn server_screen(app: &App) -> Node {
     }));
     let body = match page {
         Page::Console => console_page(app, sid),
+        Page::Version => version_page(app),
         Page::Properties => properties_page(app),
         Page::Backups => backups_page(app),
         other => soon_page(app, *other),
@@ -323,6 +369,13 @@ fn dialog_view(app: &App, d: &Dialog) -> Node {
                 460.0,
             )
         }
+        Dialog::ConfirmVersion { software, version, .. } => dialog(
+            t,
+            "Change server version",
+            mono(&format!("Install {software} {version} into this server? The world and settings are kept, but a world saved by a newer Minecraft version cannot be opened by an older one. A backup of the world is made first.")),
+            vec![button(t, "dlg:no", "Cancel", ButtonKind::Normal, hov(app, "dlg:no"), true), button(t, "dlg:yes", "Install", ButtonKind::Primary, hov(app, "dlg:yes"), true)],
+            480.0,
+        ),
         Dialog::NewServer => new_server_dialog(app),
     }
 }

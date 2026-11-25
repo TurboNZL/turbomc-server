@@ -17,6 +17,7 @@ One JSON object per line. Request `{"id":1,"method":"servers.list","params":{}}`
 | `servers.command` | id, text | |
 | `servers.console` | id, max | `[{level, text}]` |
 | `servers.rename` / `servers.delete` | id, name | delete refuses a running server |
+| `servers.version.change` | id, software, version, backup (default true) | `{task}`; backs the world up first, then installs; progress as `task` events |
 | `servers.properties.get` | id | `[{key, value, description}]` |
 | `servers.properties.set` | id, values `{key: value}` | |
 | `servers.backups.list` / `.create` / `.restore` / `.delete` | id, label / path | restore backs up the current world first |
@@ -25,4 +26,4 @@ Events: `console.line {server, text, level}`, `server.state {server, state}` (st
 
 Java: each server records the Java it needs when it is installed; the core scans the usual places (`/usr/lib/jvm`, `~/.sdkman`, `~/.jdks`, ...) and picks the exact major version or the next newer one. A per-server Java path override wins.
 
-Not in the API yet: version switching, Modrinth mods and plugins, worlds, notes, playit.gg, port tools, settings.
+Not in the API yet: Modrinth mods and plugins, worlds, notes, playit.gg, port tools, settings.

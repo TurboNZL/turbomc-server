@@ -18,6 +18,7 @@
 #include "minecraft/MinecraftInstance.h"
 #include "server/ServerBackup.h"
 #include "server/ServerCreationTask.h"
+#include "server/ServerInstallTask.h"
 #include "server/ServerLookup.h"
 #include "server/ServerProcess.h"
 #include "server/ServerProperties.h"
@@ -369,6 +370,46 @@ void ApiServer::dispatch(const QString& method, const QJsonObject& params, const
         } else {
             APPLICATION->instances()->deleteInstance(instance->id());
             ok(QJsonObject{});
+        }
+    } else if (method == "servers.version.change") {
+        if (process->state() != Process::State::Stopped) {
+            fail("stop the server first");
+            return;
+        }
+        const auto software = softwareFromKey(params.value("software").toString());
+        const QString version = params.value("version").toString();
+        if (version.isEmpty()) {
+            fail("pick a version first");
+            return;
+        }
+        const int number = m_nextTask++;
+        auto install = [this, instance, software, version, number]() {
+            auto* task = new InstallTask(instance, software, version);
+            watchTask(task, number, [this](bool ok, QString) {
+                if (ok) {
+                    broadcast({ { "event", "servers.changed" } });
+                }
+            });
+            task->start();
+        };
+        // a safety copy of the world first (unless the UI said not to)
+        if (params.value("backup").toBool(true) && Backups::hasWorld(instance)) {
+            auto backup = Backups::create(instance, QString("before-%1-%2").arg(softwareKey(software), version), &error);
+            if (!backup) {
+                fail("could not back up the world first: " + error);
+                return;
+            }
+            ok(QJsonObject{ { "task", number } });
+            broadcast({ { "event", "task" }, { "task", number }, { "state", "running" }, { "status", "Backing up the world..." } });
+            connect(backup.get(), &Task::succeeded, this, [backup, install]() mutable { backup.reset(); install(); });
+            connect(backup.get(), &Task::failed, this, [this, backup, number](const QString& reason) mutable {
+                broadcast({ { "event", "task" }, { "task", number }, { "state", "failed" }, { "error", "The world could not be backed up first: " + reason } });
+                backup.reset();
+            });
+            backup->start();
+        } else {
+            ok(QJsonObject{ { "task", number } });
+            install();
         }
     } else if (method == "servers.properties.get") {
         Properties props;

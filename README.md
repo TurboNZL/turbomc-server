@@ -87,7 +87,7 @@ Try the new window from source (after building the core as below):
 cd ui && TURBOMC_CORE=../build/turbomc-server cargo run --release
 ```
 
-Working in the new window: server list, create a server (software and version list, progress), start / stop / kill, EULA and Java prompts, live console with a command box, `server.properties` editor, backups (create, restore, delete). Placeholders: server version switching, mods and plugins, worlds, notes, settings, and everything on the roadmap below.
+Working in the new window: server list, create a server (software and version list, progress), start / stop / kill, EULA and Java prompts, live console with a command box, switching a server's software or version (the world is backed up first), `server.properties` editor, backups (create, restore, delete). Placeholders: mods and plugins, worlds, notes, settings, and everything on the roadmap below.
 
 ## 📦 Installing (early builds)
 

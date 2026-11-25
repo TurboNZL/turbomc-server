@@ -74,6 +74,7 @@ pub enum Screen {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Dialog {
     NewServer,
+    ConfirmVersion { id: String, software: String, version: String },
     Eula(String),
     Message { title: String, text: String },
     ConfirmDelete(String),
@@ -103,6 +104,8 @@ pub struct NewServerForm {
 }
 
 enum Tag {
+    VersionList,
+    VersionChange,
     List,
     Software,
     Versions,
@@ -126,7 +129,11 @@ pub struct App {
     pub dialog: Option<Dialog>,
     pub software: Vec<(String, String)>,
     pub form: NewServerForm,
+    /// The version picker on a server's Server version page.
+    pub vform: NewServerForm,
     pub task: Option<TaskInfo>,
+    /// True when `task` is a version change (otherwise it is a new server).
+    task_is_version: bool,
     pub console: HashMap<String, Vec<(String, String)>>,
     pub scroll: HashMap<String, f32>,
     pub follow: bool,
@@ -153,7 +160,9 @@ impl App {
             dialog: None,
             software: vec![],
             form: NewServerForm { software: 0, versions: vec![], version: None, unstable: false, loading: false },
+            vform: NewServerForm { software: 0, versions: vec![], version: None, unstable: false, loading: false },
             task: None,
+            task_is_version: false,
             console: HashMap::new(),
             scroll: HashMap::new(),
             follow: true,
@@ -226,6 +235,15 @@ impl App {
         self.call(Tag::Versions, "software.versions", json!({ "software": key, "unstable": unstable }));
     }
 
+    fn fetch_version_page_versions(&mut self) {
+        let Some((key, _)) = self.software.get(self.vform.software).cloned() else { return };
+        self.vform.loading = true;
+        self.vform.versions.clear();
+        self.vform.version = None;
+        let unstable = self.vform.unstable;
+        self.call(Tag::VersionList, "software.versions", json!({ "software": key, "unstable": unstable }));
+    }
+
     fn open_page(&mut self, id: &str, page: Page) {
         self.screen = Screen::Server(id.to_string(), page);
         self.focus = None;
@@ -239,6 +257,12 @@ impl App {
                     self.inputs.remove(&k);
                 }
                 self.call(Tag::Props, "servers.properties.get", json!({ "id": id }));
+            }
+            Page::Version => {
+                let current = self.servers.iter().find(|s| s.id == id).map(|s| s.software.clone()).unwrap_or_default();
+                self.vform.software = self.software.iter().position(|(k, _)| *k == current).unwrap_or(0);
+                self.vform.unstable = false;
+                self.fetch_version_page_versions();
             }
             Page::Backups => {
                 self.backup_sel = None;
@@ -330,13 +354,18 @@ impl App {
                 match v.get("state").and_then(Value::as_str).unwrap_or("") {
                     "done" => {
                         self.task = None;
-                        self.dialog = None;
-                        self.select_after_refresh = Some(self.input("new-name").to_string());
+                        if self.task_is_version {
+                            self.toast("Installed. Start the server to use it.");
+                        } else {
+                            self.dialog = None;
+                            self.select_after_refresh = Some(self.input("new-name").to_string());
+                        }
                         self.call(Tag::List, "servers.list", json!({}));
                     }
                     "failed" => {
                         self.task = None;
-                        self.dialog = Some(Dialog::Message { title: "Could not create the server".into(), text: str_of("error") });
+                        let title = if self.task_is_version { "Could not change the version" } else { "Could not create the server" };
+                        self.dialog = Some(Dialog::Message { title: title.into(), text: str_of("error") });
                     }
                     _ => {
                         if let Some(t) = self.task.as_mut() {
@@ -388,11 +417,31 @@ impl App {
                     self.toast(format!("Could not load versions: {error}"));
                 }
             }
+            Tag::VersionList => {
+                self.vform.loading = false;
+                if ok {
+                    self.vform.versions = result.as_array().map(|a| a.iter().map(|v| (v["id"].as_str().unwrap_or("").to_string(), v["stable"].as_bool().unwrap_or(true))).collect()).unwrap_or_default();
+                } else {
+                    self.toast(format!("Could not load versions: {error}"));
+                }
+            }
+            Tag::VersionChange => {
+                if ok {
+                    let number = result["task"].as_i64().unwrap_or(0);
+                    self.task_is_version = true;
+                    self.task = Some(TaskInfo { number, progress: 0.0, status: "Starting...".into() });
+                } else {
+                    self.task = None;
+                    self.dialog = Some(Dialog::Message { title: "Could not change the version".into(), text: error });
+                }
+            }
             Tag::Create => {
                 if ok {
                     let number = result["task"].as_i64().unwrap_or(0);
+                    self.task_is_version = false;
                     self.task = Some(TaskInfo { number, progress: 0.0, status: "Starting...".into() });
                 } else {
+                    self.task = None;
                     self.dialog = Some(Dialog::Message { title: "Could not create the server".into(), text: error });
                 }
             }
@@ -462,6 +511,26 @@ impl App {
         if let Some(p) = id.strip_prefix("page:").and_then(Page::from_key) {
             if let Screen::Server(sid, _) = self.screen.clone() {
                 self.open_page(&sid, p);
+            }
+            return true;
+        }
+        if let Some(i) = id.strip_prefix("vsw:").and_then(|n| n.parse::<usize>().ok()) {
+            self.vform.software = i;
+            self.fetch_version_page_versions();
+            return true;
+        }
+        if let Some(v) = id.strip_prefix("vver:") {
+            self.vform.version = Some(v.to_string());
+            return true;
+        }
+        if id == "vunstable" {
+            self.vform.unstable = !self.vform.unstable;
+            self.fetch_version_page_versions();
+            return true;
+        }
+        if id == "vinstall" {
+            if let (Screen::Server(sid, _), Some(version), Some((software, _))) = (self.screen.clone(), self.vform.version.clone(), self.software.get(self.vform.software).cloned()) {
+                self.dialog = Some(Dialog::ConfirmVersion { id: sid, software, version });
             }
             return true;
         }
@@ -589,6 +658,13 @@ impl App {
                 } else {
                     return false;
                 }
+                true
+            }
+            (Some(Dialog::ConfirmVersion { id: sid, software, version }), "dlg:yes") => {
+                self.dialog = None;
+                self.task = Some(TaskInfo { number: -1, progress: 0.0, status: "Starting...".into() });
+                self.task_is_version = true;
+                self.call(Tag::VersionChange, "servers.version.change", json!({ "id": sid, "software": software, "version": version, "backup": true }));
                 true
             }
             (Some(Dialog::Eula(sid)), "dlg:yes") => {
