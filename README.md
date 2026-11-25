@@ -77,6 +77,18 @@ tested on Vanilla, Paper, Purpur and Fabric), but a lot is still on the way. The
 
 **Nothing updates automatically.** Version changes, mod updates and tunnels only happen when you ask for them.
 
+## 🪟 How it is built now
+
+Two programs: the **core** (C++, the Prism-derived code that installs, runs and backs up servers, started with `--serve` so it has no window, see [docs/development/API.md](docs/development/API.md)) and the **window** (`ui/`, Rust, drawn with [TurboUI](https://github.com/TurboNZL/turboui)). The window starts the core by itself and talks to it over a local socket. The old Qt window is still in the tree and in the package as `turbomc-server-classic`.
+
+Try the new window from source (after building the core as below):
+
+```bash
+cd ui && TURBOMC_CORE=../build/turbomc-server cargo run --release
+```
+
+Working in the new window: server list, create a server (software and version list, progress), start / stop / kill, EULA and Java prompts, live console with a command box, `server.properties` editor, backups (create, restore, delete). Placeholders: server version switching, mods and plugins, worlds, notes, settings, and everything on the roadmap below.
+
 ## 📦 Installing (early builds)
 
 Linux (Debian / Ubuntu) builds are published as a rolling **nightly** release of the latest commit on `main`:

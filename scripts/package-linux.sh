@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Builds a .deb with Qt bundled (so it does not depend on the distro's Qt version).
 #
-#   scripts/package-linux.sh <build-dir> <qt-dir> <version> <out-dir>
+#   scripts/package-linux.sh <build-dir> <qt-dir> <version> <out-dir> [path to the turbomc-ui binary]
+#
+# With the UI binary, `turbomc-server` opens the new window (which starts the core in the background) and the old Qt window
+# stays available as `turbomc-server-classic`. Without it, `turbomc-server` is the old Qt window.
 #
 # <qt-dir> is the Qt prefix used for the build, e.g. ~/Qt/6.8.3/gcc_64.
 # Needs: dpkg-deb, patchelf is NOT required (a wrapper script sets the library path).
@@ -11,6 +14,7 @@ BUILD=$(realpath "${1:?build dir}")
 QT=$(realpath "${2:?qt dir}")
 VERSION="${3:?version}"
 OUT=$(mkdir -p "${4:?out dir}" && realpath "$4")
+UI_BIN=${5:-}
 
 NAME=turbomc-server
 APP=opt/$NAME
@@ -90,7 +94,20 @@ export QT_QPA_PLATFORM_PLUGIN_PATH="$DIR/plugins/platforms"
 exec "$DIR/bin/turbomc-server" "$@"
 WRAP
 chmod 755 "$ROOT/$APP/$NAME.sh"
-ln -s "/$APP/$NAME.sh" "$ROOT/usr/bin/$NAME"
+if [ -n "$UI_BIN" ]; then
+    install -m 755 "$UI_BIN" "$ROOT/$APP/bin/turbomc-ui"
+    cat > "$ROOT/$APP/turbomc-ui.sh" <<'WRAP'
+#!/bin/sh
+DIR=$(dirname "$(readlink -f "$0")")
+export TURBOMC_CORE="$DIR/turbomc-server.sh"
+exec "$DIR/bin/turbomc-ui" "$@"
+WRAP
+    chmod 755 "$ROOT/$APP/turbomc-ui.sh"
+    ln -s "/$APP/turbomc-ui.sh" "$ROOT/usr/bin/$NAME"
+    ln -s "/$APP/$NAME.sh" "$ROOT/usr/bin/$NAME-classic"
+else
+    ln -s "/$APP/$NAME.sh" "$ROOT/usr/bin/$NAME"
+fi
 for d in applications icons metainfo mime; do
     [ -d "$ROOT/$APP/share/$d" ] && mkdir -p "$ROOT/usr/share/$d" && cp -a "$ROOT/$APP/share/$d/." "$ROOT/usr/share/$d/"
 done
@@ -106,7 +123,7 @@ Architecture: amd64
 Installed-Size: $SIZE
 Maintainer: TurboNZL <noreply@users.noreply.github.com>
 Homepage: https://github.com/TurboNZL/turbomc-server
-Depends: libc6, libstdc++6, libgcc-s1, libgl1, libegl1, libxkbcommon0, libxkbcommon-x11-0, libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1, libxcb-xkb1, libxcb-image0, libxcb-render-util0, libxcb-shape0, libxcb-xinerama0, libfontconfig1, libfreetype6, libdbus-1-3, libglib2.0-0, default-jre-headless | java-runtime-headless
+Depends: libc6, libstdc++6, libgcc-s1, libgl1, libegl1, libxkbcommon0, libxkbcommon-x11-0, libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1, libxcb-xkb1, libxcb-image0, libxcb-render-util0, libxcb-shape0, libxcb-xinerama0, libfontconfig1, libfreetype6, libdbus-1-3, libglib2.0-0, libvulkan1, libwayland-client0, mesa-vulkan-drivers | vulkan-icd, default-jre-headless | java-runtime-headless
 Description: Run, update and manage Minecraft servers from one window
  TurboMC Server keeps all your Minecraft servers in one list. Install Vanilla,
  Paper, Purpur or Fabric, change versions, install Modrinth mods and plugins,
